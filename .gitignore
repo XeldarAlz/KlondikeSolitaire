@@ -100,3 +100,9 @@ InitTestScene*.unity*
 
 # macOS
 .DS_Store
+
+.idea/.idea.KlondikeSolitaire3/.idea/
+
+.idea/.idea.KlondikeSolitaire/.idea/
+
+.claude/worktrees/
