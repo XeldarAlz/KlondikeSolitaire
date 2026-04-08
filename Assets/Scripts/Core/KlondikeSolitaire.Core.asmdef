@@ -1,0 +1,14 @@
+{
+    "name": "KlondikeSolitaire.Core",
+    "rootNamespace": "KlondikeSolitaire.Core",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
