@@ -12,3 +12,5 @@
 {"ts":"2026-04-08T19:19:56Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P1","phase":1,"model":"opus"}}
 {"ts":"2026-04-08T19:24:59Z","event":"review_verdict","data":{"task":"P1","verdict":"PASS","reviewer":"reviewer-1","issues":["DealCompletedMessage missing - adding before commit"]}}
 {"ts":"2026-04-08T19:26:14Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P1","phase":1,"model":"sonnet"}}
+{"ts":"2026-04-08T19:27:26Z","event":"agent_completed","data":{"agent":"reviewer-1","task":"review-P1","files":[]}}
+{"ts":"2026-04-08T19:27:26Z","event":"commit_created","data":{"phase":1,"sha":"8eec503..2f88da8","message":"7 atomic commits for Phase 1 Core Foundation"}}
