@@ -1,0 +1,14 @@
+{"ts":"2026-04-08T19:13:33Z","event":"orchestration_started","data":{"phases":9,"tasks_total":45}}
+{"ts":"2026-04-08T19:15:32Z","event":"agent_spawned","data":{"agent":"coder-1","type":"coder","task":"P1.T1","phase":1,"model":"haiku"}}
+{"ts":"2026-04-08T19:15:32Z","event":"agent_spawned","data":{"agent":"coder-2","type":"coder","task":"P1.T2","phase":1,"model":"haiku"}}
+{"ts":"2026-04-08T19:15:32Z","event":"agent_spawned","data":{"agent":"coder-3","type":"coder","task":"P1.T3","phase":1,"model":"haiku"}}
+{"ts":"2026-04-08T19:15:32Z","event":"agent_spawned","data":{"agent":"coder-4","type":"coder","task":"P1.T4","phase":1,"model":"sonnet"}}
+{"ts":"2026-04-08T19:15:32Z","event":"agent_spawned","data":{"agent":"coder-5","type":"coder","task":"P1.T5","phase":1,"model":"haiku"}}
+{"ts":"2026-04-08T19:19:07Z","event":"agent_completed","data":{"agent":"coder-1","task":"P1.T1","files":[]}}
+{"ts":"2026-04-08T19:19:07Z","event":"agent_completed","data":{"agent":"coder-2","task":"P1.T2","files":[]}}
+{"ts":"2026-04-08T19:19:07Z","event":"agent_completed","data":{"agent":"coder-3","task":"P1.T3","files":[]}}
+{"ts":"2026-04-08T19:19:07Z","event":"agent_completed","data":{"agent":"coder-4","task":"P1.T4","files":[]}}
+{"ts":"2026-04-08T19:19:07Z","event":"agent_completed","data":{"agent":"coder-5","task":"P1.T5","files":[]}}
+{"ts":"2026-04-08T19:19:56Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P1","phase":1,"model":"opus"}}
+{"ts":"2026-04-08T19:24:59Z","event":"review_verdict","data":{"task":"P1","verdict":"PASS","reviewer":"reviewer-1","issues":["DealCompletedMessage missing - adding before commit"]}}
+{"ts":"2026-04-08T19:26:14Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P1","phase":1,"model":"sonnet"}}
