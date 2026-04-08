@@ -1,0 +1,219 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Bash",
+      "Glob",
+      "Grep",
+      "Agent",
+      "TaskCreate",
+      "TaskUpdate",
+      "TaskGet",
+      "TaskList",
+      "TaskOutput",
+      "TaskStop",
+      "WebSearch",
+      "WebFetch"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-scene-edit.sh",
+            "timeout": 3000,
+            "statusMessage": "Checking for scene/prefab edits..."
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/guard-editor-runtime.sh",
+            "timeout": 5000,
+            "statusMessage": "Checking UnityEditor guard..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-pure-csharp.sh",
+            "timeout": 10,
+            "statusMessage": "Checking pure C# constraint..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-naming-conventions.sh",
+            "timeout": 10,
+            "statusMessage": "Checking naming conventions..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-no-linq-hotpath.sh",
+            "timeout": 10,
+            "statusMessage": "Checking LINQ on hot paths..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-no-runtime-instantiate.sh",
+            "timeout": 10,
+            "statusMessage": "Checking runtime instantiation..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-test-exists.sh",
+            "timeout": 15,
+            "statusMessage": "Checking test coverage..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-compile.sh",
+            "timeout": 10,
+            "statusMessage": "Checking syntax..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/update-progress.sh",
+            "timeout": 5,
+            "statusMessage": "Logging activity..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/warn-serialization.sh",
+            "timeout": 5000,
+            "statusMessage": "Checking serialization safety..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/warn-filename.sh",
+            "timeout": 3000,
+            "statusMessage": "Checking filename matches class..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/checkpoint-nudge.sh",
+            "timeout": 3000,
+            "statusMessage": "Checking checkpoint status..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-unused-code.sh",
+            "timeout": 15000,
+            "statusMessage": "Checking for unused code..."
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-input-system.sh",
+            "timeout": 10000,
+            "statusMessage": "Checking Input System patterns..."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-compact-save.sh",
+            "timeout": 10000,
+            "statusMessage": "Saving state before compaction..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/prevent-premature-stop.sh",
+            "timeout": 5000,
+            "statusMessage": "Checking orchestration state..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/session-start-detect.sh",
+            "timeout": 3000
+          }
+        ]
+      }
+    ]
+  }
+}
