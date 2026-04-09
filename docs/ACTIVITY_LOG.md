@@ -93,3 +93,9 @@
 | 2026-04-08 22:46:49 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
 | 2026-04-09 06:11:36 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/AutoCompleteSystem.cs` |
 | 2026-04-09 06:11:38 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/ScoringSystemTests.cs` |
+| 2026-04-09 06:27:32 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-09 06:46:42 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/Helpers/TestSubscriber.cs` |
+| 2026-04-09 06:46:44 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveExecutionSystem.cs` |
+| 2026-04-09 06:46:45 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/HintSystem.cs` |
+| 2026-04-09 06:46:52 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/HintSystem.cs` |
+| 2026-04-09 06:46:53 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/HintSystem.cs` |
