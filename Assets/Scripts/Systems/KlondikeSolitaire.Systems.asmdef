@@ -3,7 +3,8 @@
     "rootNamespace": "KlondikeSolitaire.Systems",
     "references": [
         "KlondikeSolitaire.Core",
-        "MessagePipe"
+        "MessagePipe",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
