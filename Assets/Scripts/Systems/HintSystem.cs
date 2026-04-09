@@ -12,7 +12,6 @@ namespace KlondikeSolitaire.Systems
         private readonly IPublisher<HintHighlightMessage> _hintHighlightPublisher;
         private readonly IPublisher<HintClearedMessage> _hintClearedPublisher;
         private readonly List<Move> _cachedMoves;
-        private readonly PileId[] _destPileBuffer;
         private int _hintIndex;
         private IDisposable _subscription;
 
@@ -28,7 +27,6 @@ namespace KlondikeSolitaire.Systems
             _hintHighlightPublisher = hintHighlightPublisher ?? throw new ArgumentNullException(nameof(hintHighlightPublisher));
             _hintClearedPublisher = hintClearedPublisher ?? throw new ArgumentNullException(nameof(hintClearedPublisher));
             _cachedMoves = new List<Move>();
-            _destPileBuffer = new PileId[1];
             _hintIndex = -1;
             _subscription = (boardStateSubscriber ?? throw new ArgumentNullException(nameof(boardStateSubscriber)))
                 .Subscribe(OnBoardStateChanged);
@@ -59,8 +57,8 @@ namespace KlondikeSolitaire.Systems
             PileModel sourcePile = _board.GetPile(currentHint.Source);
             int sourceCardIndex = sourcePile.Count - currentHint.CardCount;
 
-            _destPileBuffer[0] = currentHint.Destination;
-            _hintHighlightPublisher.Publish(new HintHighlightMessage(sourceCardIndex, currentHint.Source, _destPileBuffer));
+            PileId[] destPileIds = new PileId[] { currentHint.Destination };
+            _hintHighlightPublisher.Publish(new HintHighlightMessage(sourceCardIndex, currentHint.Source, destPileIds));
         }
 
         public void Reset()
@@ -73,6 +71,7 @@ namespace KlondikeSolitaire.Systems
         public void Dispose()
         {
             _subscription?.Dispose();
+            _subscription = null;
         }
     }
 }

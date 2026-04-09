@@ -45,6 +45,7 @@ namespace KlondikeSolitaire.Systems
         public void Dispose()
         {
             _subscription?.Dispose();
+            _subscription = null;
         }
     }
 }
