@@ -1,2 +1,2 @@
-{"ts":"2026-04-08T19:34:57Z","type":"start","message":"Starting P2.T4: Test Infrastructure — creating asmdef, TestBoardFactory, TestPublisher"}
-{"ts":"2026-04-08T19:36:39Z","type":"progress","message":"Created all 3 output files: asmdef, TestBoardFactory.cs (6 factory methods), TestPublisher.cs"}
+{"ts":"2026-04-09T03:30:33Z","type":"progress","message":"Starting P4.T4: UndoSystemTests. Read UndoSystem.cs, DealSystemTests.cs, TestPublisher.cs, TestBoardFactory.cs. Writing test file now."}
+{"ts":"2026-04-09T03:34:59Z","type":"complete","message":"P4.T4 done. UndoSystemTests.cs written with 49 tests: constructor guards (5), CanUndo state (4), Push (2), Undo normal move (6 card movement + 2 score), WasCardFlipped (5), DrawFromStock (6), RecycleWaste (5), message publishing (8), empty stack (3), Clear (3), multi-step undo (5). All acceptance criteria covered."}

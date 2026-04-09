@@ -58,3 +58,4 @@
 {"ts":"2026-04-09T03:35:00Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P4","phase":4,"model":"opus"}}
 {"ts":"2026-04-09T03:40:00Z","event":"review_verdict","data":{"task":"P4","verdict":"FAIL-then-PASS","reviewer":"reviewer-1","issues":["TestSubscriber wrong ISubscriber interface - fixed","MoveExecutionSystem silent default - fixed","HintSystem PileId[] alloc per call - fixed"]}}
 {"ts":"2026-04-09T03:40:00Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P4","phase":4,"model":"sonnet"}}
+{"ts":"2026-04-09T03:42:00Z","event":"commit_created","data":{"phase":4,"sha":"62a72a2..58d172f","message":"5 atomic commits for Phase 4 Integration Systems + Core Tests"}}
