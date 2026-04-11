@@ -69,7 +69,6 @@ namespace KlondikeSolitaire.Systems
 
             _gamePhase.Phase.Value = GamePhase.Playing;
             _phaseChangedPublisher.Publish(new GamePhaseChangedMessage(GamePhase.Playing));
-            _dealCompletedPublisher.Publish(new DealCompletedMessage());
         }
 
         public void StartAutoComplete()
