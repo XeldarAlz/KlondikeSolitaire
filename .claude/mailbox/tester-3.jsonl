@@ -1,2 +1,0 @@
-{"ts":"2026-04-09T03:59:50Z","type":"start","message":"Starting P5.T4: NoMovesDetectionSystem Tests. Analyzed codebase patterns, all helpers and models confirmed."}
-{"ts":"2026-04-09T04:00:26Z","type":"complete","message":"P5.T4 done. Wrote Assets/Tests/EditMode/NoMovesDetectionSystemTests.cs with 14 NUnit tests: 5 null-guard constructor tests, 3 Playing-phase behavioral tests (publish on deadlock, suppress on stock, suppress on valid tableau), 4 phase-filter tests (Dealing/AutoCompleting/Won/NoMoves), and 1 Dispose unsubscription test."}

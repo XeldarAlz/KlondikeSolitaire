@@ -1,2 +1,0 @@
-{"ts":"2026-04-11T09:18:28Z","type":"start","message":"Starting P7.T10 GameLifetimeScope - reading system and model files"}
-{"ts":"2026-04-11T09:19:35Z","type":"complete","message":"P7.T10 GameLifetimeScope written to Assets/Scripts/Views/Bootstrap/GameLifetimeScope.cs. Registered 3 models, 9 systems (6 with IDisposable), 13 message brokers, 4 views. InputView and WinCascadeView omitted as they do not exist in the codebase yet. GameFlowSystem registered as Singleton+IDisposable (does not implement IStartable)."}
