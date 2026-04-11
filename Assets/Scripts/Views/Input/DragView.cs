@@ -11,12 +11,18 @@ namespace KlondikeSolitaire.Views
         private Vector3[] _dragOffsets;
         private bool _isDragging;
 
-        private static readonly int CardsLayerId = SortingLayer.NameToID("Cards");
-        private static readonly int DragLayerId = SortingLayer.NameToID("Drag");
+        private static int CardsLayerId;
+        private static int DragLayerId;
 
         private AnimationConfig _animConfig;
 
         public bool IsDragging => _isDragging;
+
+        private void Awake()
+        {
+            CardsLayerId = SortingLayer.NameToID("Cards");
+            DragLayerId = SortingLayer.NameToID("Drag");
+        }
 
         public void Initialize(AnimationConfig animConfig)
         {

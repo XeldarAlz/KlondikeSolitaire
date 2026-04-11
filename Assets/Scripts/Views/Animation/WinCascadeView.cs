@@ -26,7 +26,7 @@ namespace KlondikeSolitaire.Views
         private const float CARD_TWEEN_DURATION = 4.0f;
         private const float INITIAL_SPEED = 5.5f;
 
-        private static readonly int CascadeLayerId = SortingLayer.NameToID("Cascade");
+        private static int CascadeLayerId;
 
         private readonly SpriteRenderer[] _stampRenderers = new SpriteRenderer[STAMP_POOL_SIZE];
         private readonly GameObject[] _stampObjects = new GameObject[STAMP_POOL_SIZE];
@@ -55,6 +55,7 @@ namespace KlondikeSolitaire.Views
 
         private void Start()
         {
+            CascadeLayerId = SortingLayer.NameToID("Cascade");
             for (int stampIndex = 0; stampIndex < STAMP_POOL_SIZE; stampIndex++)
             {
                 GameObject instance = Instantiate(_cascadeStampPrefab, _stampPoolParent);

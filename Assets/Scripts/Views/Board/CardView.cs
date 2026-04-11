@@ -13,7 +13,7 @@ namespace KlondikeSolitaire.Views
         private Sprite _backStripSprite;
         private bool _isStripMode;
 
-        private static readonly int CardsLayerId = SortingLayer.NameToID("Cards");
+        private static int CardsLayerId;
 
         private readonly CompositeDisposable _disposables = new();
 
@@ -22,6 +22,7 @@ namespace KlondikeSolitaire.Views
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            CardsLayerId = SortingLayer.NameToID("Cards");
         }
 
         public void Initialize(CardModel model, Sprite faceSprite, Sprite backSprite, Sprite backStripSprite)
