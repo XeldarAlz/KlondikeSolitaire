@@ -26,7 +26,7 @@ namespace KlondikeSolitaire.Tests
             _board = TestBoardFactory.EmptyBoard();
             _scoreModel = new ScoreModel();
             _scoreChangedPublisher = new TestPublisher<ScoreChangedMessage>();
-            _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(), _scoreChangedPublisher);
+            _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(5, 10, 10, -15, 5), _scoreChangedPublisher);
 
             _undoAvailabilityPublisher = new TestPublisher<UndoAvailabilityChangedMessage>();
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
@@ -429,8 +429,8 @@ namespace KlondikeSolitaire.Tests
             _sut.ExecuteMove(PileId.Tableau(0), PileId.Tableau(1), 1);
             _undoSystem.Undo();
 
-            // After undo the flipped card should be face down again
-            Assert.That(_board.Tableau[0].TopCard.IsFaceUp.Value, Is.False);
+            // After undo the auto-flipped card should be face down again
+            Assert.That(faceDownCard.IsFaceUp.Value, Is.False);
         }
 
         [Test]

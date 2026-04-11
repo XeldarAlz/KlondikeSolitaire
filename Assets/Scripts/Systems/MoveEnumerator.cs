@@ -14,12 +14,13 @@ namespace KlondikeSolitaire.Systems
 
             PileId wasteId = PileId.Waste();
 
-            for (int foundationIndex = 0; foundationIndex < FOUNDATION_COUNT; foundationIndex++)
+            PileModel wastePile = board.Waste;
+            if (wastePile.Count > 0)
             {
-                PileId foundationId = PileId.Foundation(foundationIndex);
-                if (validation.IsValidMove(board, wasteId, foundationId, 1))
+                PileId canonicalFoundation = PileId.Foundation((int)wastePile.TopCard.Suit);
+                if (validation.IsValidMove(board, wasteId, canonicalFoundation, 1))
                 {
-                    results.Add(new Move(wasteId, foundationId, 1));
+                    results.Add(new Move(wasteId, canonicalFoundation, 1));
                 }
             }
 
@@ -41,14 +42,10 @@ namespace KlondikeSolitaire.Systems
                 }
 
                 PileId sourceId = PileId.Tableau(sourceIndex);
-
-                for (int foundationIndex = 0; foundationIndex < FOUNDATION_COUNT; foundationIndex++)
+                PileId canonicalFoundation = PileId.Foundation((int)sourcePile.TopCard.Suit);
+                if (validation.IsValidMove(board, sourceId, canonicalFoundation, 1))
                 {
-                    PileId foundationId = PileId.Foundation(foundationIndex);
-                    if (validation.IsValidMove(board, sourceId, foundationId, 1))
-                    {
-                        results.Add(new Move(sourceId, foundationId, 1));
-                    }
+                    results.Add(new Move(sourceId, canonicalFoundation, 1));
                 }
             }
 
@@ -103,10 +100,11 @@ namespace KlondikeSolitaire.Systems
 
             PileId wasteId = PileId.Waste();
 
-            for (int foundationIndex = 0; foundationIndex < FOUNDATION_COUNT; foundationIndex++)
+            PileModel wastePile = board.Waste;
+            if (wastePile.Count > 0)
             {
-                PileId foundationId = PileId.Foundation(foundationIndex);
-                if (validation.IsValidMove(board, wasteId, foundationId, 1))
+                PileId canonicalFoundation = PileId.Foundation((int)wastePile.TopCard.Suit);
+                if (validation.IsValidMove(board, wasteId, canonicalFoundation, 1))
                 {
                     return true;
                 }
@@ -130,14 +128,10 @@ namespace KlondikeSolitaire.Systems
                 }
 
                 PileId sourceId = PileId.Tableau(sourceIndex);
-
-                for (int foundationIndex = 0; foundationIndex < FOUNDATION_COUNT; foundationIndex++)
+                PileId canonicalFoundation = PileId.Foundation((int)sourcePile.TopCard.Suit);
+                if (validation.IsValidMove(board, sourceId, canonicalFoundation, 1))
                 {
-                    PileId foundationId = PileId.Foundation(foundationIndex);
-                    if (validation.IsValidMove(board, sourceId, foundationId, 1))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 

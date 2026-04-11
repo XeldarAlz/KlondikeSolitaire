@@ -23,7 +23,7 @@ namespace KlondikeSolitaire.Tests
             _board = TestBoardFactory.EmptyBoard();
             _scoreModel = new ScoreModel();
             _scoreChangedPublisher = new TestPublisher<ScoreChangedMessage>();
-            _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(), _scoreChangedPublisher);
+            _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(5, 10, 10, -15, 5), _scoreChangedPublisher);
             _undoAvailabilityPublisher = new TestPublisher<UndoAvailabilityChangedMessage>();
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
             _cardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
@@ -261,7 +261,7 @@ namespace KlondikeSolitaire.Tests
 
             _sut.Undo();
 
-            Assert.That(_board.Tableau[1].TopCard.IsFaceUp.Value, Is.False);
+            Assert.That(faceUpCardInSource.IsFaceUp.Value, Is.False);
         }
 
         [Test]
