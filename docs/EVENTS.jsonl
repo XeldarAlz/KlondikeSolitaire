@@ -82,3 +82,4 @@
 {"ts":"2026-04-09T04:53:47Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P6","phase":6,"model":"opus"}}
 {"ts":"2026-04-11T09:03:41Z","event":"review_verdict","data":{"task":"P6","verdict":"PASS","reviewer":"orchestrator+P6.T3","issues":["MoveEnumerator foundation optimization","ScoringTable constructor fix","Undo assertion fixes","Reviewer rate-limited - validated by orchestrator"]}}
 {"ts":"2026-04-11T09:03:53Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P6","phase":6,"model":"sonnet"}}
+{"ts":"2026-04-11T09:05:15Z","event":"commit_created","data":{"phase":6,"sha":"4f9ba03..6b17f29","message":"3 atomic commits for Phase 6 Final Tests + System Review"}}
