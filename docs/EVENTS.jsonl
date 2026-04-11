@@ -108,3 +108,15 @@
 {"ts":"2026-04-11T10:25:00Z","event":"review_verdict","data":{"task":"P7","verdict":"PASS","reviewer":"reviewer-1","issues":["asmdef PrimeTween ref fixed","GameLifetimeScope restored","unused members cleaned up","duplicate DealCompletedMessage fixed"]}}
 {"ts":"2026-04-11T10:26:00Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P7","phase":7,"model":"sonnet"}}
 {"ts":"2026-04-11T10:30:00Z","event":"commit_created","data":{"phase":7,"sha":"1a0b277..fd6c9f4","message":"8 atomic commits for Phase 7 Unity Views & Integration Layer"}}
+{"ts":"2026-04-11T09:40:14Z","event":"phase_transition","data":{"from":7,"to":8,"name":"Editor Tools + Scene Setup"}}
+{"ts":"2026-04-11T09:40:43Z","event":"agent_spawned","data":{"agent":"coder-1","type":"coder","task":"P8.T1","phase":8,"model":"sonnet"}}
+{"ts":"2026-04-11T09:44:18Z","event":"agent_completed","data":{"agent":"coder-1","task":"P8.T1","files":["Assets/Editor/CardAtlasGenerator.cs","Assets/Editor/KlondikeSolitaire.Editor.asmdef"]}}
+{"ts":"2026-04-11T09:44:18Z","event":"agent_spawned","data":{"agent":"unity-setup-1","type":"unity-setup","task":"P8.T2","phase":8,"model":"sonnet"}}
+{"ts":"2026-04-11T09:44:18Z","event":"agent_spawned","data":{"agent":"unity-setup-2","type":"unity-setup","task":"P8.T3","phase":8,"model":"sonnet"}}
+{"ts":"2026-04-11T09:44:18Z","event":"agent_spawned","data":{"agent":"unity-setup-3","type":"unity-setup","task":"P8.T4","phase":8,"model":"sonnet"}}
+{"ts":"2026-04-11T09:49:03Z","event":"agent_completed","data":{"agent":"unity-setup-3","task":"P8.T4","files":["Assets/ScriptableObjects/Config/LayoutConfig.asset","Assets/ScriptableObjects/Config/AnimationConfig.asset","Assets/ScriptableObjects/Config/ScoringConfig.asset","Assets/ScriptableObjects/Config/InputConfig.asset","Assets/ScriptableObjects/Definitions/CardSpriteMapping.asset","Assets/Input/SolitaireControls.inputactions","Assets/Input/SolitaireControls.cs"]}}
+{"ts":"2026-04-11T09:50:53Z","event":"agent_completed","data":{"agent":"unity-setup-2","task":"P8.T3","files":["Assets/Prefabs/Card.prefab","Assets/Prefabs/CascadeStamp.prefab"]}}
+{"ts":"2026-04-11T09:56:52Z","event":"agent_completed","data":{"agent":"unity-setup-1","task":"P8.T2","files":["Assets/Scenes/SampleScene.unity"]}}
+{"ts":"2026-04-11T09:57:16Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P8","phase":8,"model":"opus"}}
+{"ts":"2026-04-11T10:01:05Z","event":"review_verdict","data":{"task":"P8","verdict":"PASS","reviewer":"reviewer-1","issues":["CardSpriteMapping empty until generator runs","PileView.Awake empty body","CardsLayerId set redundantly in each CardView Awake"]}}
+{"ts":"2026-04-11T10:01:19Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P8","phase":8,"model":"sonnet"}}

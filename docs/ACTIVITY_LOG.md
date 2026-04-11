@@ -125,3 +125,14 @@
 | 2026-04-11 12:05:33 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
 | 2026-04-11 12:11:50 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
 | 2026-04-11 12:34:56 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 12:40:17 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 12:40:21 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 12:40:33 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 12:40:39 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 12:55:33 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Views/Board/CardView.cs` |
+| 2026-04-11 12:55:37 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Views/Input/DragView.cs` |
+| 2026-04-11 12:55:44 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Views/Animation/WinCascadeView.cs` |
+| 2026-04-11 12:55:51 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Views/Animation/WinCascadeView.cs` |
+| 2026-04-11 12:57:10 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 13:01:09 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-11 13:01:15 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
