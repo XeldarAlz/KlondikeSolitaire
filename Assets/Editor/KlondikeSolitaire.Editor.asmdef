@@ -1,0 +1,19 @@
+{
+    "name": "KlondikeSolitaire.Editor",
+    "rootNamespace": "KlondikeSolitaire.Editor",
+    "references": [
+        "KlondikeSolitaire.Core",
+        "KlondikeSolitaire.Views"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
