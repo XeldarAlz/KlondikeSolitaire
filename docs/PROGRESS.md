@@ -14,7 +14,7 @@
 | 5 | Orchestration System + Integration System Tests | done |
 | 6 | Final Tests + System Review | done |
 | 7 | Unity Views & Integration Layer | done |
-| 8 | Editor Tools + Scene Setup | active |
+| 8 | Editor Tools + Scene Setup | done |
 | 9 | Integration & Runtime Validation | pending |
 
 ## Agents
@@ -25,7 +25,7 @@
 | unity-setup-2 | unity_setup | passed | P8.T3: Prefab Creation | 100% |
 | unity-setup-3 | unity_setup | passed | P8.T4: SO Asset Creation | 100% |
 | reviewer-1 | reviewer | passed | review-P8 | 100% |
-| committer-1 | committer | running | commit-P8 | 0% |
+| committer-1 | committer | passed | commit-P8 | 100% |
 
 ## Tasks
 | ID | Title | Status | Agent | Complexity |
@@ -56,3 +56,7 @@
 [2026-04-11T10:30:00Z] [system] Phase 7: Unity Views & Integration Layer — COMPLETE (8 atomic commits)
 [2026-04-11T11:00:00Z] [system] Phase 8: Editor Tools + Scene Setup — STARTED
 [2026-04-11T11:00:00Z] [agent:coder-1] Starting: P8.T1 CardAtlasGenerator (complexity: M, model: sonnet)
+[2026-04-11T11:05:00Z] [system] P8-A group (P8.T1) — completed
+[2026-04-11T11:10:00Z] [system] P8-B group (P8.T2, P8.T3, P8.T4) — all completed
+[2026-04-11T11:15:00Z] [agent:reviewer-1] Review PASS — zero compile errors, zero runtime errors, all criteria met
+[2026-04-11T11:20:00Z] [system] Phase 8: Editor Tools + Scene Setup — COMPLETE (8 atomic commits)

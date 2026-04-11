@@ -120,3 +120,4 @@
 {"ts":"2026-04-11T09:57:16Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P8","phase":8,"model":"opus"}}
 {"ts":"2026-04-11T10:01:05Z","event":"review_verdict","data":{"task":"P8","verdict":"PASS","reviewer":"reviewer-1","issues":["CardSpriteMapping empty until generator runs","PileView.Awake empty body","CardsLayerId set redundantly in each CardView Awake"]}}
 {"ts":"2026-04-11T10:01:19Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P8","phase":8,"model":"sonnet"}}
+{"ts":"2026-04-11T10:03:03Z","event":"commit_created","data":{"phase":8,"sha":"3958342..f91b715","message":"8 atomic commits for Phase 8 Editor Tools + Scene Setup"}}
