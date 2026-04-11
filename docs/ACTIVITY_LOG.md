@@ -111,3 +111,14 @@
 | 2026-04-09 07:08:03 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/HintSystem.cs` |
 | 2026-04-09 07:08:08 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/HintSystem.cs` |
 | 2026-04-09 07:13:12 | Write | `/Users/xeldar/Development/KlondikeSolitaire3/docs/PROGRESS.md` |
+| 2026-04-09 07:46:15 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveValidationSystem.cs` |
+| 2026-04-09 07:46:24 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveValidationSystem.cs` |
+| 2026-04-09 07:46:36 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/MoveExecutionSystemTests.cs` |
+| 2026-04-09 07:46:39 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/UndoSystemTests.cs` |
+| 2026-04-09 07:46:43 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/GameFlowSystemTests.cs` |
+| 2026-04-09 07:46:57 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/UndoSystemTests.cs` |
+| 2026-04-09 07:47:11 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Tests/EditMode/MoveExecutionSystemTests.cs` |
+| 2026-04-09 07:48:39 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveValidationSystem.cs` |
+| 2026-04-09 07:48:46 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveValidationSystem.cs` |
+| 2026-04-09 07:49:08 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveEnumerator.cs` |
+| 2026-04-09 07:49:21 | Edit | `/Users/xeldar/Development/KlondikeSolitaire3/Assets/Scripts/Systems/MoveEnumerator.cs` |
