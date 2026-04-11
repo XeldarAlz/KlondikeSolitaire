@@ -121,3 +121,13 @@
 {"ts":"2026-04-11T10:01:05Z","event":"review_verdict","data":{"task":"P8","verdict":"PASS","reviewer":"reviewer-1","issues":["CardSpriteMapping empty until generator runs","PileView.Awake empty body","CardsLayerId set redundantly in each CardView Awake"]}}
 {"ts":"2026-04-11T10:01:19Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P8","phase":8,"model":"sonnet"}}
 {"ts":"2026-04-11T10:03:03Z","event":"commit_created","data":{"phase":8,"sha":"3958342..f91b715","message":"8 atomic commits for Phase 8 Editor Tools + Scene Setup"}}
+{"ts":"2026-04-11T10:19:19Z","event":"phase_transition","data":{"from":8,"to":9,"name":"Integration & Runtime Validation"}}
+{"ts":"2026-04-11T10:20:11Z","event":"agent_spawned","data":{"agent":"unity-setup-1","type":"unity-setup","task":"P9.T1","phase":9,"model":"sonnet"}}
+{"ts":"2026-04-11T10:20:11Z","event":"agent_spawned","data":{"agent":"tester-1","type":"tester","task":"P9.T2","phase":9,"model":"sonnet"}}
+{"ts":"2026-04-11T10:25:54Z","event":"agent_completed","data":{"agent":"tester-1","task":"P9.T2","files":["Assets/Tests/PlayMode/KlondikeSolitaire.Tests.PlayMode.asmdef","Assets/Tests/PlayMode/IntegrationTests.cs"]}}
+{"ts":"2026-04-11T10:26:30Z","event":"agent_completed","data":{"agent":"unity-setup-1","task":"P9.T1","files":["Assets/Art/Sprites/cards/generated/ (53 PNGs)"]}}
+{"ts":"2026-04-11T10:26:37Z","event":"agent_spawned","data":{"agent":"coder-1","type":"coder","task":"P9.T3","phase":9,"model":"sonnet"}}
+{"ts":"2026-04-11T10:31:48Z","event":"agent_completed","data":{"agent":"coder-1","task":"P9.T3","files":["Assets/Tests/PlayMode/KlondikeSolitaire.Tests.PlayMode.asmdef","Assets/Tests/EditMode/GameFlowSystemTests.cs"]}}
+{"ts":"2026-04-11T10:31:53Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P9","phase":9,"model":"opus"}}
+{"ts":"2026-04-11T10:35:51Z","event":"review_verdict","data":{"task":"P9","verdict":"PASS","reviewer":"reviewer-1","issues":[]}}
+{"ts":"2026-04-11T10:35:51Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P9","phase":9,"model":"sonnet"}}
