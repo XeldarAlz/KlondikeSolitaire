@@ -107,3 +107,4 @@
 {"ts":"2026-04-11T10:20:00Z","event":"agent_spawned","data":{"agent":"reviewer-1","type":"reviewer","task":"review-P7","phase":7,"model":"opus"}}
 {"ts":"2026-04-11T10:25:00Z","event":"review_verdict","data":{"task":"P7","verdict":"PASS","reviewer":"reviewer-1","issues":["asmdef PrimeTween ref fixed","GameLifetimeScope restored","unused members cleaned up","duplicate DealCompletedMessage fixed"]}}
 {"ts":"2026-04-11T10:26:00Z","event":"agent_spawned","data":{"agent":"committer-1","type":"committer","task":"commit-P7","phase":7,"model":"sonnet"}}
+{"ts":"2026-04-11T10:30:00Z","event":"commit_created","data":{"phase":7,"sha":"1a0b277..fd6c9f4","message":"8 atomic commits for Phase 7 Unity Views & Integration Layer"}}

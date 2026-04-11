@@ -1,0 +1,2 @@
+{"ts":"2026-04-11T09:16:20Z","type":"progress","message":"Read source files. PileId is a readonly struct - not directly serializable. Will use separate [SerializeField] PileType + int fields. Starting implementation."}
+{"ts":"2026-04-11T09:16:41Z","type":"done","message":"PileView.cs written to Assets/Scripts/Views/Board/PileView.cs. Uses separate [SerializeField] PileType + int fields for serialization. All acceptance criteria addressed: card positioning per pile type, vertical tableau offsets, sorting orders, strip mode logic, pile base sprite, GetCardWorldPosition."}
