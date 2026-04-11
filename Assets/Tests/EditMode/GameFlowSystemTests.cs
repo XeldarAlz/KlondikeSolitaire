@@ -29,8 +29,8 @@ namespace KlondikeSolitaire.Tests
             _board = TestBoardFactory.EmptyBoard();
             _scoreModel = new ScoreModel();
 
-            var dealCompletedForDeal = new TestPublisher<DealCompletedMessage>();
-            _dealSystem = new DealSystem(_board, dealCompletedForDeal);
+            _dealCompletedPublisher = new TestPublisher<DealCompletedMessage>();
+            _dealSystem = new DealSystem(_board, _dealCompletedPublisher);
 
             var scoreChangedPublisher = new TestPublisher<ScoreChangedMessage>();
             var scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(5, 10, 10, -15, 5), scoreChangedPublisher);
@@ -60,7 +60,6 @@ namespace KlondikeSolitaire.Tests
             _newGameSubscriber = new TestSubscriber<NewGameRequestedMessage>();
             _phaseChangedPublisher = new TestPublisher<GamePhaseChangedMessage>();
             _winDetectedPublisher = new TestPublisher<WinDetectedMessage>();
-            _dealCompletedPublisher = new TestPublisher<DealCompletedMessage>();
 
             _sut = CreateSystem();
         }
