@@ -1,14 +1,13 @@
 namespace KlondikeSolitaire.Core
 {
-    public readonly struct MoveCommand
+    public readonly struct MoveCommand : System.IEquatable<MoveCommand>
     {
-        public readonly MoveType Type;
-        public readonly PileId Source;
-        public readonly PileId Destination;
-        public readonly int CardCount;
-        public readonly int ScoreDelta;
-        public readonly bool WasCardFlipped;
-        public readonly int WasteCardCount;
+        public MoveType Type { get; }
+        public PileId Source { get; }
+        public PileId Destination { get; }
+        public int CardCount { get; }
+        public int ScoreDelta { get; }
+        public bool WasCardFlipped { get; }
 
         public MoveCommand(
             MoveType type,
@@ -16,8 +15,7 @@ namespace KlondikeSolitaire.Core
             PileId destination,
             int cardCount,
             int scoreDelta,
-            bool wasCardFlipped,
-            int wasteCardCount)
+            bool wasCardFlipped)
         {
             Type = type;
             Source = source;
@@ -25,7 +23,22 @@ namespace KlondikeSolitaire.Core
             CardCount = cardCount;
             ScoreDelta = scoreDelta;
             WasCardFlipped = wasCardFlipped;
-            WasteCardCount = wasteCardCount;
         }
+
+        public bool Equals(MoveCommand other) =>
+            Type == other.Type
+            && Source == other.Source
+            && Destination == other.Destination
+            && CardCount == other.CardCount
+            && ScoreDelta == other.ScoreDelta
+            && WasCardFlipped == other.WasCardFlipped;
+
+        public override bool Equals(object obj) => obj is MoveCommand other && Equals(other);
+
+        public override int GetHashCode() =>
+            System.HashCode.Combine(Type, Source, Destination, CardCount, ScoreDelta, WasCardFlipped);
+
+        public static bool operator ==(MoveCommand left, MoveCommand right) => left.Equals(right);
+        public static bool operator !=(MoveCommand left, MoveCommand right) => !left.Equals(right);
     }
 }

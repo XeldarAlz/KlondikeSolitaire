@@ -12,8 +12,6 @@ namespace KlondikeSolitaire.Core
         {
             Suit.Hearts => CardColor.Red,
             Suit.Diamonds => CardColor.Red,
-            Suit.Clubs => CardColor.Black,
-            Suit.Spades => CardColor.Black,
             _ => CardColor.Black
         };
     }

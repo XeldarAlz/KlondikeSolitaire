@@ -2,11 +2,11 @@ namespace KlondikeSolitaire.Core
 {
     public readonly struct ScoringTable
     {
-        public readonly int WasteToTableau;
-        public readonly int WasteToFoundation;
-        public readonly int TableauToFoundation;
-        public readonly int FoundationToTableau;
-        public readonly int FlipCard;
+        public int WasteToTableau { get; }
+        public int WasteToFoundation { get; }
+        public int TableauToFoundation { get; }
+        public int FoundationToTableau { get; }
+        public int FlipCard { get; }
 
         public ScoringTable(
             int wasteToTableau = 5,

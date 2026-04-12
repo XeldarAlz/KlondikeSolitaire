@@ -2,9 +2,9 @@ namespace KlondikeSolitaire.Core
 {
     public readonly struct CardMovedMessage
     {
-        public readonly PileId SourcePileId;
-        public readonly PileId DestPileId;
-        public readonly int CardCount;
+        public PileId SourcePileId { get; }
+        public PileId DestPileId { get; }
+        public int CardCount { get; }
 
         public CardMovedMessage(PileId sourcePileId, PileId destPileId, int cardCount)
         {
@@ -16,8 +16,8 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct CardFlippedMessage
     {
-        public readonly PileId PileId;
-        public readonly int CardIndex;
+        public PileId PileId { get; }
+        public int CardIndex { get; }
 
         public CardFlippedMessage(PileId pileId, int cardIndex)
         {
@@ -28,8 +28,8 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct ScoreChangedMessage
     {
-        public readonly int NewScore;
-        public readonly int Delta;
+        public int NewScore { get; }
+        public int Delta { get; }
 
         public ScoreChangedMessage(int newScore, int delta)
         {
@@ -40,7 +40,7 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct GamePhaseChangedMessage
     {
-        public readonly GamePhase NewPhase;
+        public GamePhase NewPhase { get; }
 
         public GamePhaseChangedMessage(GamePhase newPhase)
         {
@@ -50,7 +50,7 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct AutoCompleteAvailableMessage
     {
-        public readonly bool IsAvailable;
+        public bool IsAvailable { get; }
 
         public AutoCompleteAvailableMessage(bool isAvailable)
         {
@@ -60,7 +60,7 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct UndoAvailabilityChangedMessage
     {
-        public readonly bool IsAvailable;
+        public bool IsAvailable { get; }
 
         public UndoAvailabilityChangedMessage(bool isAvailable)
         {
@@ -70,15 +70,15 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct HintHighlightMessage
     {
-        public readonly int SourceCardIndex;
-        public readonly PileId SourcePileId;
-        public readonly PileId[] DestPileIds;
+        public int SourceCardIndex { get; }
+        public PileId SourcePileId { get; }
+        public PileId DestPileId { get; }
 
-        public HintHighlightMessage(int sourceCardIndex, PileId sourcePileId, PileId[] destPileIds)
+        public HintHighlightMessage(int sourceCardIndex, PileId sourcePileId, PileId destPileId)
         {
             SourceCardIndex = sourceCardIndex;
             SourcePileId = sourcePileId;
-            DestPileIds = destPileIds;
+            DestPileId = destPileId;
         }
     }
 
@@ -96,7 +96,7 @@ namespace KlondikeSolitaire.Core
 
     public readonly struct WinDetectedMessage
     {
-        public readonly int FinalScore;
+        public int FinalScore { get; }
 
         public WinDetectedMessage(int finalScore)
         {

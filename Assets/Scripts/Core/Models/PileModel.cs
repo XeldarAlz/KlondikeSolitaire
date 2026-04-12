@@ -8,7 +8,7 @@ namespace KlondikeSolitaire.Core
 
         public PileType PileType { get; }
         public int PileIndex { get; }
-        public PileId Id => new PileId(PileType, PileIndex);
+        public PileId Id => new(PileType, PileIndex);
         public IReadOnlyList<CardModel> Cards => _cards;
         public CardModel TopCard => _cards.Count > 0 ? _cards[_cards.Count - 1] : null;
         public int Count => _cards.Count;
@@ -62,6 +62,25 @@ namespace KlondikeSolitaire.Core
             List<CardModel> removed = new List<CardModel>(_cards);
             _cards.Clear();
             return removed;
+        }
+
+        public void TransferTop(int count, PileModel destination)
+        {
+            int startIndex = _cards.Count - count;
+            for (int cardIndex = startIndex; cardIndex < _cards.Count; cardIndex++)
+            {
+                destination._cards.Add(_cards[cardIndex]);
+            }
+            _cards.RemoveRange(startIndex, count);
+        }
+
+        public void TransferAllReversed(PileModel destination)
+        {
+            for (int cardIndex = _cards.Count - 1; cardIndex >= 0; cardIndex--)
+            {
+                destination._cards.Add(_cards[cardIndex]);
+            }
+            _cards.Clear();
         }
 
         public void Clear()
