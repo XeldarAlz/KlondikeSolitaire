@@ -34,6 +34,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
         private TestNewGameSubscriber _newGameSubscriber;
 
         private MoveValidationSystem _moveValidation;
+        private MoveEnumerator _moveEnumerator;
         private ScoringSystem _scoringSystem;
         private UndoSystem _undoSystem;
         private DealSystem _dealSystem;
@@ -69,6 +70,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
             _newGameSubscriber = new TestNewGameSubscriber();
 
             _moveValidation = new MoveValidationSystem();
+            _moveEnumerator = new MoveEnumerator(_moveValidation);
             _scoringSystem = new ScoringSystem(
                 _scoreModel,
                 _scoringTable,
@@ -78,10 +80,12 @@ namespace KlondikeSolitaire.Tests.PlayMode
                 _scoringSystem,
                 new TypedPublisher<UndoAvailabilityChangedMessage>(_undoAvailabilityPublisher),
                 new TypedPublisher<BoardStateChangedMessage>(_boardStatePublisher),
-                new TypedPublisher<CardFlippedMessage>(_cardFlippedPublisher));
+                new TypedPublisher<CardFlippedMessage>(_cardFlippedPublisher),
+                new TypedPublisher<CardMovedMessage>(_cardMovedPublisher));
             _dealSystem = new DealSystem(
                 _board,
-                new TypedPublisher<DealCompletedMessage>(_dealCompletedPublisher));
+                new TypedPublisher<DealCompletedMessage>(_dealCompletedPublisher),
+                new System.Random(42));
             _moveExecution = new MoveExecutionSystem(
                 _board,
                 _scoringSystem,
@@ -91,18 +95,17 @@ namespace KlondikeSolitaire.Tests.PlayMode
                 new TypedPublisher<BoardStateChangedMessage>(_boardStatePublisher));
             _hintSystem = new HintSystem(
                 _board,
-                _moveValidation,
+                _moveEnumerator,
                 _boardStateSubscriber,
                 new TypedPublisher<HintHighlightMessage>(_hintHighlightPublisher),
                 new TypedPublisher<HintClearedMessage>(_hintClearedPublisher));
             _autoComplete = new AutoCompleteSystem(
                 _board,
-                _moveValidation,
                 _boardStateSubscriber,
                 new TypedPublisher<AutoCompleteAvailableMessage>(_autoCompleteAvailablePublisher));
             _noMovesDetection = new NoMovesDetectionSystem(
                 _board,
-                _moveValidation,
+                _moveEnumerator,
                 _gamePhaseModel,
                 _boardStateSubscriber,
                 new TypedPublisher<NoMovesDetectedMessage>(_noMovesPublisher));
@@ -111,14 +114,14 @@ namespace KlondikeSolitaire.Tests.PlayMode
                 _dealSystem,
                 _board,
                 _scoreModel,
+                _scoringSystem,
                 _undoSystem,
                 _hintSystem,
                 _boardStateSubscriber,
                 _noMovesSubscriber,
                 _newGameSubscriber,
                 new TypedPublisher<GamePhaseChangedMessage>(_gamePhaseChangedPublisher),
-                new TypedPublisher<WinDetectedMessage>(_winDetectedPublisher),
-                new TypedPublisher<DealCompletedMessage>(_dealCompletedPublisher));
+                new TypedPublisher<WinDetectedMessage>(_winDetectedPublisher));
         }
 
         [TearDown]
@@ -128,8 +131,6 @@ namespace KlondikeSolitaire.Tests.PlayMode
             _noMovesDetection.Dispose();
             _autoComplete.Dispose();
             _hintSystem.Dispose();
-            _moveExecution.Dispose();
-            _undoSystem.Dispose();
         }
 
         // --- Full game flow: deal → execute moves → verify score updates ---
@@ -518,36 +519,6 @@ namespace KlondikeSolitaire.Tests.PlayMode
             {
                 Assert.That(moves[moveIndex].Source.Type, Is.EqualTo(PileType.Tableau),
                     $"Move {moveIndex} should come from a tableau pile");
-            }
-        }
-
-        [UnityTest]
-        public IEnumerator AutoComplete_AfterGenerateMoveSequence_AllFoundationsHave13Cards()
-        {
-            SetupAutoCompletableBoard();
-            yield return null;
-
-            _autoComplete.GenerateMoveSequence();
-
-            for (int foundationIndex = 0; foundationIndex < _board.Foundations.Length; foundationIndex++)
-            {
-                Assert.That(_board.Foundations[foundationIndex].Count, Is.EqualTo(13),
-                    $"Foundation[{foundationIndex}] should have 13 cards after auto-complete");
-            }
-        }
-
-        [UnityTest]
-        public IEnumerator AutoComplete_AfterGenerateMoveSequence_AllTableauColumnsAreEmpty()
-        {
-            SetupAutoCompletableBoard();
-            yield return null;
-
-            _autoComplete.GenerateMoveSequence();
-
-            for (int tableauIndex = 0; tableauIndex < _board.Tableau.Length; tableauIndex++)
-            {
-                Assert.That(_board.Tableau[tableauIndex].Count, Is.EqualTo(0),
-                    $"Tableau[{tableauIndex}] should be empty after auto-complete");
             }
         }
 

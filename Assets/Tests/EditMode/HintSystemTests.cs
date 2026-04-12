@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using NUnit.Framework;
@@ -9,7 +8,7 @@ namespace KlondikeSolitaire.Tests
     public sealed class HintSystemTests
     {
         private BoardModel _board;
-        private MoveValidationSystem _moveValidation;
+        private MoveEnumerator _moveEnumerator;
         private TestSubscriber<BoardStateChangedMessage> _boardStateSubscriber;
         private TestPublisher<HintHighlightMessage> _hintHighlightPublisher;
         private TestPublisher<HintClearedMessage> _hintClearedPublisher;
@@ -19,13 +18,13 @@ namespace KlondikeSolitaire.Tests
         public void SetUp()
         {
             _board = TestBoardFactory.EmptyBoard();
-            _moveValidation = new MoveValidationSystem();
+            _moveEnumerator = new MoveEnumerator(new MoveValidationSystem());
             _boardStateSubscriber = new TestSubscriber<BoardStateChangedMessage>();
             _hintHighlightPublisher = new TestPublisher<HintHighlightMessage>();
             _hintClearedPublisher = new TestPublisher<HintClearedMessage>();
             _sut = new HintSystem(
                 _board,
-                _moveValidation,
+                _moveEnumerator,
                 _boardStateSubscriber,
                 _hintHighlightPublisher,
                 _hintClearedPublisher);
@@ -35,43 +34,6 @@ namespace KlondikeSolitaire.Tests
         public void TearDown()
         {
             _sut.Dispose();
-        }
-
-        // --- Constructor null guard tests ---
-
-        [Test]
-        public void Constructor_NullBoard_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new HintSystem(null, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullMoveValidation_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new HintSystem(_board, null, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullBoardStateSubscriber_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new HintSystem(_board, _moveValidation, null, _hintHighlightPublisher, _hintClearedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullHintHighlightPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new HintSystem(_board, _moveValidation, _boardStateSubscriber, null, _hintClearedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullHintClearedPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new HintSystem(_board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, null));
         }
 
         // --- GetNextHint: no valid moves is a no-op ---
@@ -88,7 +50,7 @@ namespace KlondikeSolitaire.Tests
         public void GetNextHint_NoMovesBoard_DoesNotPublishHintHighlightMessage()
         {
             BoardModel board = TestBoardFactory.NoMovesBoard();
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
 
@@ -107,7 +69,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
 
@@ -124,7 +86,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
 
@@ -143,7 +105,7 @@ namespace KlondikeSolitaire.Tests
                 b.Tableau[0].AddCard(faceDown);
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
 
@@ -153,7 +115,7 @@ namespace KlondikeSolitaire.Tests
         }
 
         [Test]
-        public void GetNextHint_WithValidMove_DestPileIdsIsNotEmpty()
+        public void GetNextHint_WithValidMove_DestPileIdIsSet()
         {
             BoardModel board = TestBoardFactory.CustomBoard(b =>
             {
@@ -161,30 +123,12 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
 
             sut.Dispose();
-            Assert.That(_hintHighlightPublisher.LastMessage.DestPileIds, Is.Not.Null);
-            Assert.That(_hintHighlightPublisher.LastMessage.DestPileIds.Length, Is.GreaterThan(0));
-        }
-
-        [Test]
-        public void GetNextHint_AceToFoundation_DestPileIdIsFoundation()
-        {
-            BoardModel board = TestBoardFactory.CustomBoard(b =>
-            {
-                CardModel ace = new CardModel(Suit.Hearts, Rank.Ace);
-                ace.IsFaceUp.Value = true;
-                b.Tableau[0].AddCard(ace);
-            });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
-
-            sut.GetNextHint();
-
-            sut.Dispose();
-            Assert.That(_hintHighlightPublisher.LastMessage.DestPileIds[0].Type, Is.EqualTo(PileType.Foundation));
+            Assert.That(_hintHighlightPublisher.LastMessage.DestPileId.Type, Is.EqualTo(PileType.Foundation));
         }
 
         // --- GetNextHint: cycling through hints ---
@@ -193,7 +137,7 @@ namespace KlondikeSolitaire.Tests
         public void GetNextHint_CalledTwice_PublishesTwoMessages()
         {
             BoardModel board = BuildBoardWithTwoValidMoves();
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
             sut.GetNextHint();
@@ -206,7 +150,7 @@ namespace KlondikeSolitaire.Tests
         public void GetNextHint_CalledTwice_SecondMessageDiffersFromFirst()
         {
             BoardModel board = BuildBoardWithTwoValidMoves();
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
             HintHighlightMessage firstMessage = _hintHighlightPublisher.LastMessage;
@@ -215,7 +159,7 @@ namespace KlondikeSolitaire.Tests
 
             sut.Dispose();
             bool sourceDiffers = firstMessage.SourcePileId != secondMessage.SourcePileId;
-            bool destDiffers = firstMessage.DestPileIds[0] != secondMessage.DestPileIds[0];
+            bool destDiffers = firstMessage.DestPileId != secondMessage.DestPileId;
             Assert.That(sourceDiffers || destDiffers, Is.True,
                 "Second hint should differ from the first when multiple valid moves exist");
         }
@@ -229,7 +173,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             // With only 1 valid move: calling GetNextHint twice wraps back to the same hint
             sut.GetNextHint();
@@ -250,7 +194,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
             HintHighlightMessage firstMessage = _hintHighlightPublisher.LastMessage;
@@ -258,7 +202,7 @@ namespace KlondikeSolitaire.Tests
             HintHighlightMessage wrappedMessage = _hintHighlightPublisher.LastMessage;
 
             sut.Dispose();
-            Assert.That(wrappedMessage.DestPileIds[0], Is.EqualTo(firstMessage.DestPileIds[0]));
+            Assert.That(wrappedMessage.DestPileId, Is.EqualTo(firstMessage.DestPileId));
         }
 
         // --- Cache: populated on first call, not on construction ---
@@ -272,7 +216,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             // No message before first call
             Assert.That(_hintHighlightPublisher.MessageCount, Is.EqualTo(0));
@@ -287,7 +231,7 @@ namespace KlondikeSolitaire.Tests
         public void GetNextHint_CalledThreeTimes_WithTwoMoves_ThirdCallPublishesFirstMoveAgain()
         {
             BoardModel board = BuildBoardWithTwoValidMoves();
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
             HintHighlightMessage first = _hintHighlightPublisher.LastMessage;
@@ -299,7 +243,7 @@ namespace KlondikeSolitaire.Tests
 
             sut.Dispose();
             Assert.That(third.SourcePileId, Is.EqualTo(first.SourcePileId));
-            Assert.That(third.DestPileIds[0], Is.EqualTo(first.DestPileIds[0]));
+            Assert.That(third.DestPileId, Is.EqualTo(first.DestPileId));
         }
 
         // --- BoardStateChanged: clears cache and publishes HintClearedMessage ---
@@ -334,7 +278,7 @@ namespace KlondikeSolitaire.Tests
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var hintPublisher = new TestPublisher<HintHighlightMessage>();
             var clearedPublisher = new TestPublisher<HintClearedMessage>();
-            var sut = new HintSystem(board, _moveValidation, subscriber, hintPublisher, clearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, subscriber, hintPublisher, clearedPublisher);
 
             // Get the first hint (caches moves)
             sut.GetNextHint();
@@ -369,7 +313,7 @@ namespace KlondikeSolitaire.Tests
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var hintPublisher = new TestPublisher<HintHighlightMessage>();
             var clearedPublisher = new TestPublisher<HintClearedMessage>();
-            var sut = new HintSystem(board, _moveValidation, subscriber, hintPublisher, clearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, subscriber, hintPublisher, clearedPublisher);
 
             // Triggering board state change should NOT publish a hint highlight
             subscriber.Trigger(new BoardStateChangedMessage());
@@ -406,7 +350,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new HintSystem(board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
 
             sut.GetNextHint();
             HintHighlightMessage firstHint = _hintHighlightPublisher.LastMessage;
@@ -440,7 +384,7 @@ namespace KlondikeSolitaire.Tests
         {
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var clearedPublisher = new TestPublisher<HintClearedMessage>();
-            var sut = new HintSystem(_board, _moveValidation, subscriber, _hintHighlightPublisher, clearedPublisher);
+            var sut = new HintSystem(_board, _moveEnumerator, subscriber, _hintHighlightPublisher, clearedPublisher);
 
             sut.Dispose();
             subscriber.Trigger(new BoardStateChangedMessage());
@@ -451,7 +395,7 @@ namespace KlondikeSolitaire.Tests
         [Test]
         public void Dispose_CalledTwice_DoesNotThrow()
         {
-            var sut = new HintSystem(_board, _moveValidation, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
+            var sut = new HintSystem(_board, _moveEnumerator, _boardStateSubscriber, _hintHighlightPublisher, _hintClearedPublisher);
             sut.Dispose();
 
             Assert.DoesNotThrow(() => sut.Dispose());

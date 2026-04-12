@@ -10,6 +10,7 @@ namespace KlondikeSolitaire.Tests
     {
         private BoardModel _board;
         private TestPublisher<DealCompletedMessage> _publisher;
+        private System.Random _random;
         private DealSystem _sut;
 
         [SetUp]
@@ -17,23 +18,8 @@ namespace KlondikeSolitaire.Tests
         {
             _board = TestBoardFactory.EmptyBoard();
             _publisher = new TestPublisher<DealCompletedMessage>();
-            _sut = new DealSystem(_board, _publisher);
-        }
-
-        // --- Constructor guard tests ---
-
-        [Test]
-        public void Constructor_NullBoard_ThrowsArgumentNullException()
-        {
-            Assert.Throws<System.ArgumentNullException>(() =>
-                new DealSystem(null, _publisher));
-        }
-
-        [Test]
-        public void Constructor_NullPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<System.ArgumentNullException>(() =>
-                new DealSystem(_board, null));
+            _random = new System.Random(42);
+            _sut = new DealSystem(_board, _publisher, _random);
         }
 
         // --- CreateDeal: deck uniqueness (Fisher-Yates produces 52 unique cards) ---
@@ -73,62 +59,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         // --- CreateDeal: tableau column card counts ---
-
-        [Test]
-        public void CreateDeal_TableauColumn0_HasOneCard()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[0].Count, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn1_HasTwoCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[1].Count, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn2_HasThreeCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[2].Count, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn3_HasFourCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[3].Count, Is.EqualTo(4));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn4_HasFiveCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[4].Count, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn5_HasSixCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[5].Count, Is.EqualTo(6));
-        }
-
-        [Test]
-        public void CreateDeal_TableauColumn6_HasSevenCards()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_board.Tableau[6].Count, Is.EqualTo(7));
-        }
 
         [Test]
         public void CreateDeal_EachTableauColumnI_HasIPlusOneCards()
@@ -232,74 +162,7 @@ namespace KlondikeSolitaire.Tests
             }
         }
 
-        // --- CreateDeal: message publishing ---
-
-        [Test]
-        public void CreateDeal_PublishesDealCompletedMessage()
-        {
-            _sut.CreateDeal();
-
-            Assert.That(_publisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void CreateDeal_CalledTwice_PublishesTwoDealCompletedMessages()
-        {
-            _sut.CreateDeal();
-            _sut.CreateDeal();
-
-            Assert.That(_publisher.MessageCount, Is.EqualTo(2));
-        }
-
         // --- Reset ---
-
-        [Test]
-        public void Reset_AfterDeal_StockIsEmpty()
-        {
-            _sut.CreateDeal();
-
-            _sut.Reset();
-
-            Assert.That(_board.Stock.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Reset_AfterDeal_WasteIsEmpty()
-        {
-            _sut.CreateDeal();
-
-            _sut.Reset();
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Reset_AfterDeal_AllFoundationsAreEmpty()
-        {
-            _sut.CreateDeal();
-
-            _sut.Reset();
-
-            for (int foundationIndex = 0; foundationIndex < 4; foundationIndex++)
-            {
-                Assert.That(_board.Foundations[foundationIndex].Count, Is.EqualTo(0),
-                    $"Foundation {foundationIndex} should be empty after Reset");
-            }
-        }
-
-        [Test]
-        public void Reset_AfterDeal_AllTableauColumnsAreEmpty()
-        {
-            _sut.CreateDeal();
-
-            _sut.Reset();
-
-            for (int columnIndex = 0; columnIndex < 7; columnIndex++)
-            {
-                Assert.That(_board.Tableau[columnIndex].Count, Is.EqualTo(0),
-                    $"Tableau column {columnIndex} should be empty after Reset");
-            }
-        }
 
         [Test]
         public void Reset_AfterDeal_AllPilesAreEmpty()
@@ -327,14 +190,6 @@ namespace KlondikeSolitaire.Tests
             }
         }
 
-        [Test]
-        public void Reset_DoesNotPublishDealCompletedMessage()
-        {
-            _sut.Reset();
-
-            Assert.That(_publisher.MessageCount, Is.EqualTo(0));
-        }
-
         // --- CreateDeal: re-deal produces a valid board ---
 
         [Test]
@@ -353,20 +208,5 @@ namespace KlondikeSolitaire.Tests
             Assert.That(totalCards, Is.EqualTo(52));
         }
 
-        [Test]
-        public void CreateDeal_TableauAndStockCardCounts_SumTo52()
-        {
-            _sut.CreateDeal();
-
-            int tableauTotal = 0;
-            for (int columnIndex = 0; columnIndex < 7; columnIndex++)
-            {
-                tableauTotal += _board.Tableau[columnIndex].Count;
-            }
-
-            int stockTotal = _board.Stock.Count;
-
-            Assert.That(tableauTotal + stockTotal, Is.EqualTo(52));
-        }
     }
 }

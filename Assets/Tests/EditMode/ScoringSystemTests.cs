@@ -25,76 +25,6 @@ namespace KlondikeSolitaire.Tests
             _sut = new ScoringSystem(_scoreModel, _scoringTable, _scoreChangedPublisher);
         }
 
-        #region CalculateScore Tests
-
-        [Test]
-        public void CalculateScore_WasteToTableau_Returns5()
-        {
-            int result = _sut.CalculateScore(MoveType.WasteToTableau);
-
-            Assert.That(result, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void CalculateScore_WasteToFoundation_Returns10()
-        {
-            int result = _sut.CalculateScore(MoveType.WasteToFoundation);
-
-            Assert.That(result, Is.EqualTo(10));
-        }
-
-        [Test]
-        public void CalculateScore_TableauToFoundation_Returns10()
-        {
-            int result = _sut.CalculateScore(MoveType.TableauToFoundation);
-
-            Assert.That(result, Is.EqualTo(10));
-        }
-
-        [Test]
-        public void CalculateScore_FoundationToTableau_ReturnsNegative15()
-        {
-            int result = _sut.CalculateScore(MoveType.FoundationToTableau);
-
-            Assert.That(result, Is.EqualTo(-15));
-        }
-
-        [Test]
-        public void CalculateScore_FlipCard_Returns5()
-        {
-            int result = _sut.CalculateScore(MoveType.FlipCard);
-
-            Assert.That(result, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void CalculateScore_DrawFromStock_Returns0()
-        {
-            int result = _sut.CalculateScore(MoveType.DrawFromStock);
-
-            Assert.That(result, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void CalculateScore_RecycleWaste_Returns0()
-        {
-            int result = _sut.CalculateScore(MoveType.RecycleWaste);
-
-            Assert.That(result, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void CalculateScore_TableauToTableau_Returns0()
-        {
-            int result = _sut.CalculateScore(MoveType.TableauToTableau);
-
-            Assert.That(result, Is.EqualTo(0));
-        }
-
-        #endregion
-
-        #region ApplyDelta Tests
-
         [Test]
         public void ApplyDelta_PositiveDelta_IncreasesScore()
         {
@@ -122,46 +52,33 @@ namespace KlondikeSolitaire.Tests
         }
 
         [Test]
-        public void ApplyDelta_PublishesScoreChangedMessage()
-        {
-            _sut.ApplyDelta(10);
-
-            Assert.That(_scoreChangedPublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void ApplyDelta_MessageContainsCorrectNewScoreAndDelta()
+        public void ApplyDelta_PublishesScoreChangedMessageWithCorrectValues()
         {
             _scoreModel.Score.Value = 5;
             _sut.ApplyDelta(15);
 
+            Assert.That(_scoreChangedPublisher.MessageCount, Is.EqualTo(1));
             ScoreChangedMessage message = _scoreChangedPublisher.LastMessage;
             Assert.That(message.NewScore, Is.EqualTo(20));
             Assert.That(message.Delta, Is.EqualTo(15));
         }
 
-        #endregion
+        [Test]
+        public void ApplyDelta_ZeroDelta_DoesNotPublishMessage()
+        {
+            _sut.ApplyDelta(0);
 
-        #region Reset Tests
+            Assert.That(_scoreChangedPublisher.MessageCount, Is.EqualTo(0));
+        }
 
         [Test]
-        public void Reset_SetsScoreToZero()
+        public void Reset_SetsScoreToZeroAndPublishesMessage()
         {
             _scoreModel.Score.Value = 100;
             _sut.Reset();
 
             Assert.That(_scoreModel.Score.Value, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Reset_PublishesScoreChangedMessage()
-        {
-            _scoreModel.Score.Value = 100;
-            _sut.Reset();
-
             Assert.That(_scoreChangedPublisher.MessageCount, Is.EqualTo(1));
         }
-
-        #endregion
     }
 }

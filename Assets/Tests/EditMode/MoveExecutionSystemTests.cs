@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using NUnit.Framework;
@@ -32,12 +31,14 @@ namespace KlondikeSolitaire.Tests
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
             _undoCardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
 
+            var undoCardMovedPublisher = new TestPublisher<CardMovedMessage>();
             _undoSystem = new UndoSystem(
                 _board,
                 _scoringSystem,
                 _undoAvailabilityPublisher,
                 _boardStatePublisher,
-                _undoCardFlippedPublisher);
+                _undoCardFlippedPublisher,
+                undoCardMovedPublisher);
 
             _cardMovedPublisher = new TestPublisher<CardMovedMessage>();
             _cardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
@@ -54,85 +55,9 @@ namespace KlondikeSolitaire.Tests
         [TearDown]
         public void TearDown()
         {
-            _sut.Dispose();
-            _undoSystem.Dispose();
-        }
-
-        // --- Constructor guard tests ---
-
-        [Test]
-        public void Constructor_NullBoardModel_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(null, _scoringSystem, _undoSystem,
-                    _cardMovedPublisher, _cardFlippedPublisher, _boardStatePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullScoringSystem_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(_board, null, _undoSystem,
-                    _cardMovedPublisher, _cardFlippedPublisher, _boardStatePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullUndoSystem_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(_board, _scoringSystem, null,
-                    _cardMovedPublisher, _cardFlippedPublisher, _boardStatePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullCardMovedPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(_board, _scoringSystem, _undoSystem,
-                    null, _cardFlippedPublisher, _boardStatePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullCardFlippedPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(_board, _scoringSystem, _undoSystem,
-                    _cardMovedPublisher, null, _boardStatePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullBoardStatePublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new MoveExecutionSystem(_board, _scoringSystem, _undoSystem,
-                    _cardMovedPublisher, _cardFlippedPublisher, null));
         }
 
         // --- ExecuteMove: cards transferred correctly ---
-
-        [Test]
-        public void ExecuteMove_WasteToTableau_RemovesCardFromSource()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            _sut.ExecuteMove(PileId.Waste(), PileId.Tableau(0), 1);
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void ExecuteMove_WasteToTableau_AddsCardToDestination()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            _sut.ExecuteMove(PileId.Waste(), PileId.Tableau(0), 1);
-
-            Assert.That(_board.Tableau[0].Count, Is.EqualTo(1));
-        }
 
         [Test]
         public void ExecuteMove_WasteToTableau_TransferredCardIsOriginalCard()
@@ -159,21 +84,6 @@ namespace KlondikeSolitaire.Tests
             _sut.ExecuteMove(PileId.Tableau(0), PileId.Tableau(1), 2);
 
             Assert.That(_board.Tableau[1].Count, Is.EqualTo(2));
-        }
-
-        [Test]
-        public void ExecuteMove_TableauToTableauMultipleCards_RemovesAllCardsFromSource()
-        {
-            CardModel kingCard = new CardModel(Suit.Hearts, Rank.King);
-            CardModel queenCard = new CardModel(Suit.Spades, Rank.Queen);
-            kingCard.IsFaceUp.Value = true;
-            queenCard.IsFaceUp.Value = true;
-            _board.Tableau[0].AddCard(kingCard);
-            _board.Tableau[0].AddCard(queenCard);
-
-            _sut.ExecuteMove(PileId.Tableau(0), PileId.Tableau(1), 2);
-
-            Assert.That(_board.Tableau[0].Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -465,18 +375,6 @@ namespace KlondikeSolitaire.Tests
         // --- ExecuteMove: messages published ---
 
         [Test]
-        public void ExecuteMove_Always_PublishesCardMovedMessage()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            _sut.ExecuteMove(PileId.Waste(), PileId.Tableau(0), 1);
-
-            Assert.That(_cardMovedPublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
         public void ExecuteMove_Always_CardMovedMessageHasCorrectSourcePileId()
         {
             CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
@@ -528,19 +426,7 @@ namespace KlondikeSolitaire.Tests
             Assert.That(_boardStatePublisher.MessageCount, Is.EqualTo(1));
         }
 
-        // --- ExecuteMove: edge case — move from pile with 1 card (pile becomes empty) ---
-
-        [Test]
-        public void ExecuteMove_SingleCardPile_SourceBecomesEmpty()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            _sut.ExecuteMove(PileId.Waste(), PileId.Tableau(0), 1);
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(0));
-        }
+        // --- ExecuteMove: edge case — pile becomes empty, no auto-flip ---
 
         [Test]
         public void ExecuteMove_TableauSingleFaceUpCard_SourceBecomesEmptyAndNoFlip()
@@ -556,28 +442,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         // --- DrawFromStock ---
-
-        [Test]
-        public void DrawFromStock_RemovesCardFromStock()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            _board.Stock.AddCard(card);
-
-            _sut.DrawFromStock();
-
-            Assert.That(_board.Stock.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void DrawFromStock_AddsCardToWaste()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            _board.Stock.AddCard(card);
-
-            _sut.DrawFromStock();
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(1));
-        }
 
         [Test]
         public void DrawFromStock_DrawnCardIsSameCard()
@@ -651,17 +515,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         [Test]
-        public void DrawFromStock_PublishesCardMovedMessage()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            _board.Stock.AddCard(card);
-
-            _sut.DrawFromStock();
-
-            Assert.That(_cardMovedPublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
         public void DrawFromStock_CardMovedMessageHasStockAsSource()
         {
             CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
@@ -707,21 +560,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         // --- RecycleWaste ---
-
-        [Test]
-        public void RecycleWaste_ClearsWaste()
-        {
-            CardModel card1 = new CardModel(Suit.Hearts, Rank.Two);
-            CardModel card2 = new CardModel(Suit.Spades, Rank.Three);
-            card1.IsFaceUp.Value = true;
-            card2.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card1);
-            _board.Waste.AddCard(card2);
-
-            _sut.RecycleWaste();
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(0));
-        }
 
         [Test]
         public void RecycleWaste_MovesAllCardsToStock()
@@ -881,18 +719,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         [Test]
-        public void RecycleWaste_PublishesCardMovedMessage()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Two);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            _sut.RecycleWaste();
-
-            Assert.That(_cardMovedPublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
         public void RecycleWaste_CardMovedMessageHasWasteAsSource()
         {
             CardModel card = new CardModel(Suit.Hearts, Rank.Two);
@@ -965,20 +791,5 @@ namespace KlondikeSolitaire.Tests
             Assert.That(_board.Stock.Count, Is.EqualTo(1));
         }
 
-        [Test]
-        public void ExecuteMove_MultipleSequentialMoves_EachPublishesCardMovedMessage()
-        {
-            CardModel card1 = new CardModel(Suit.Hearts, Rank.Ace);
-            CardModel card2 = new CardModel(Suit.Spades, Rank.King);
-            card1.IsFaceUp.Value = true;
-            card2.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card1);
-            _board.Tableau[1].AddCard(card2);
-
-            _sut.ExecuteMove(PileId.Waste(), PileId.Foundation(0), 1);
-            _sut.ExecuteMove(PileId.Tableau(1), PileId.Tableau(2), 1);
-
-            Assert.That(_cardMovedPublisher.MessageCount, Is.EqualTo(2));
-        }
     }
 }

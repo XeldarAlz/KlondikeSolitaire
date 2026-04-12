@@ -8,13 +8,13 @@ namespace KlondikeSolitaire.Tests
     [TestFixture]
     public sealed class MoveEnumeratorTests
     {
-        private MoveValidationSystem _validation;
+        private MoveEnumerator _enumerator;
         private List<Move> _results;
 
         [SetUp]
         public void SetUp()
         {
-            _validation = new MoveValidationSystem();
+            _enumerator = new MoveEnumerator(new MoveValidationSystem());
             _results = new List<Move>();
         }
 
@@ -58,7 +58,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.EmptyBoard();
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(_results.Count, Is.EqualTo(0));
@@ -72,7 +72,7 @@ namespace KlondikeSolitaire.Tests
             _results.Add(new Move(PileId.Stock(), PileId.Waste(), 1));
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(_results.Count, Is.EqualTo(0));
@@ -92,7 +92,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Stock(), PileId.Waste(), 1), Is.True);
@@ -105,7 +105,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.EmptyBoard();
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Stock(), PileId.Waste(), 1), Is.False);
@@ -125,7 +125,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             bool foundMove = false;
@@ -151,7 +151,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Waste(), PileId.Foundation(0), 1), Is.True);
@@ -168,7 +168,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Waste(), PileId.Foundation(0), 1), Is.False);
@@ -188,7 +188,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             bool foundMove = false;
@@ -214,7 +214,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Waste(), PileId.Tableau(2), 1), Is.True);
@@ -231,7 +231,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Waste(), PileId.Tableau(0), 1), Is.False);
@@ -251,7 +251,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             bool foundMove = false;
@@ -278,7 +278,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(3), PileId.Foundation(1), 1), Is.True);
@@ -294,7 +294,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             for (int foundationIndex = 0; foundationIndex < 4; foundationIndex++)
@@ -318,7 +318,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 1), Is.True);
@@ -334,7 +334,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             bool foundMove = false;
@@ -359,7 +359,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(0), 1), Is.False);
@@ -383,7 +383,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 2), Is.True);
@@ -403,7 +403,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 3), Is.True);
@@ -426,7 +426,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — move of 3 cards to Tableau[1] exists
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 3), Is.True);
@@ -449,7 +449,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — single card move (black-6) to Tableau[2] also enumerated
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(2), 1), Is.True);
@@ -469,7 +469,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 1), Is.True);
@@ -490,7 +490,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — cannot move 3 cards because face-down card is not part of valid sequence
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 3), Is.False);
@@ -511,7 +511,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — can move 2 cards (face-up portion of the run)
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Tableau(1), 2), Is.True);
@@ -531,7 +531,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — exactly one waste-to-foundation move
             int wasteToFoundationCount = 0;
@@ -557,7 +557,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — waste to tableau[0] is the only valid waste-to-tableau move
             int wasteToTableauCount = 0;
@@ -583,7 +583,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — 6 empty tableau columns can receive King
             int wasteToTableauCount = 0;
@@ -605,7 +605,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.NoMovesBoard();
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(_results.Count, Is.EqualTo(0));
@@ -618,7 +618,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.AlmostWonBoard();
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — tableau[0] King of Spades can go to foundation[3]
             Assert.That(ContainsMove(_results, PileId.Tableau(0), PileId.Foundation(3), 1), Is.True);
@@ -634,7 +634,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(_results.Count, Is.EqualTo(1));
@@ -650,7 +650,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Stock(), PileId.Waste(), 1), Is.True);
@@ -670,7 +670,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -683,7 +683,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.EmptyBoard();
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.False);
@@ -696,7 +696,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.NoMovesBoard();
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.False);
@@ -716,7 +716,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -732,7 +732,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -753,7 +753,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -769,7 +769,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -787,7 +787,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.False);
@@ -800,7 +800,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.AlmostWonBoard();
 
             // Act
-            bool result = MoveEnumerator.HasAnyValidMove(board, _validation);
+            bool result = _enumerator.HasAnyValidMove(board);
 
             // Assert
             Assert.That(result, Is.True);
@@ -820,11 +820,11 @@ namespace KlondikeSolitaire.Tests
             });
             BoardModel boardWithNoMoves = TestBoardFactory.NoMovesBoard();
 
-            MoveEnumerator.EnumerateAllValidMoves(boardWithMove, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(boardWithMove, _results);
             int firstCount = _results.Count;
 
             // Act — second call with no-moves board
-            MoveEnumerator.EnumerateAllValidMoves(boardWithNoMoves, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(boardWithNoMoves, _results);
 
             // Assert — first call had moves, second call cleared and found none
             Assert.That(firstCount, Is.GreaterThan(0));
@@ -848,7 +848,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert
             Assert.That(ContainsMove(_results, PileId.Waste(), PileId.Tableau(0), 1), Is.True);
@@ -866,7 +866,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — tableau ace can go to any empty foundation
             bool foundMove = false;
@@ -892,7 +892,7 @@ namespace KlondikeSolitaire.Tests
             });
 
             // Act
-            MoveEnumerator.EnumerateAllValidMoves(board, _validation, _results);
+            _enumerator.EnumerateAllValidMoves(board, _results);
 
             // Assert — stock-to-waste move appears exactly once
             int stockMoveCount = 0;

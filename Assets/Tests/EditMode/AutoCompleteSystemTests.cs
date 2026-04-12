@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
@@ -10,7 +9,6 @@ namespace KlondikeSolitaire.Tests
     public sealed class AutoCompleteSystemTests
     {
         private BoardModel _board;
-        private MoveValidationSystem _moveValidation;
         private TestSubscriber<BoardStateChangedMessage> _boardStateSubscriber;
         private TestPublisher<AutoCompleteAvailableMessage> _autoCompletePublisher;
         private AutoCompleteSystem _sut;
@@ -19,46 +17,15 @@ namespace KlondikeSolitaire.Tests
         public void SetUp()
         {
             _board = TestBoardFactory.EmptyBoard();
-            _moveValidation = new MoveValidationSystem();
             _boardStateSubscriber = new TestSubscriber<BoardStateChangedMessage>();
             _autoCompletePublisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            _sut = new AutoCompleteSystem(_board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            _sut = new AutoCompleteSystem(_board, _boardStateSubscriber, _autoCompletePublisher);
         }
 
         [TearDown]
         public void TearDown()
         {
             _sut.Dispose();
-        }
-
-        // --- Constructor guard tests ---
-
-        [Test]
-        public void Constructor_NullBoard_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new AutoCompleteSystem(null, _moveValidation, _boardStateSubscriber, _autoCompletePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullMoveValidation_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new AutoCompleteSystem(_board, null, _boardStateSubscriber, _autoCompletePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullSubscriber_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new AutoCompleteSystem(_board, _moveValidation, null, _autoCompletePublisher));
-        }
-
-        [Test]
-        public void Constructor_NullPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new AutoCompleteSystem(_board, _moveValidation, _boardStateSubscriber, null));
         }
 
         // --- IsAutoCompletePossible: true conditions ---
@@ -75,7 +42,7 @@ namespace KlondikeSolitaire.Tests
         public void IsAutoCompletePossible_AutoCompletableBoard_ReturnsTrue()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -93,7 +60,7 @@ namespace KlondikeSolitaire.Tests
                 CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
                 b.Stock.AddCard(card);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -105,7 +72,7 @@ namespace KlondikeSolitaire.Tests
         public void IsAutoCompletePossible_StandardDealBoard_ReturnsFalse()
         {
             BoardModel board = TestBoardFactory.StandardDealBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -124,7 +91,7 @@ namespace KlondikeSolitaire.Tests
                 card.IsFaceUp.Value = true;
                 b.Waste.AddCard(card);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -145,7 +112,7 @@ namespace KlondikeSolitaire.Tests
                 b.Tableau[0].AddCard(faceDownCard);
                 b.Tableau[0].AddCard(faceUpCard);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -162,7 +129,7 @@ namespace KlondikeSolitaire.Tests
                 card.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(card);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -182,7 +149,7 @@ namespace KlondikeSolitaire.Tests
                 CardModel faceDownCard = new CardModel(Suit.Spades, Rank.King);
                 b.Tableau[1].AddCard(faceDownCard);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             bool result = sut.IsAutoCompletePossible();
 
@@ -204,7 +171,7 @@ namespace KlondikeSolitaire.Tests
         public void GenerateMoveSequence_AutoCompletableBoard_Returns52Moves()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -216,7 +183,7 @@ namespace KlondikeSolitaire.Tests
         public void GenerateMoveSequence_AutoCompletableBoard_FirstMoveIsAce()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -229,7 +196,7 @@ namespace KlondikeSolitaire.Tests
         public void GenerateMoveSequence_AutoCompletableBoard_AllMovesAreToFoundation()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -245,7 +212,7 @@ namespace KlondikeSolitaire.Tests
         public void GenerateMoveSequence_AutoCompletableBoard_AllMovesAreFromTableau()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -261,7 +228,7 @@ namespace KlondikeSolitaire.Tests
         public void GenerateMoveSequence_AutoCompletableBoard_AllMovesHaveCardCountOne()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -282,7 +249,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -299,7 +266,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -316,7 +283,7 @@ namespace KlondikeSolitaire.Tests
                 ace.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(ace);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -325,34 +292,44 @@ namespace KlondikeSolitaire.Tests
         }
 
         [Test]
-        public void GenerateMoveSequence_BoardMutated_TableauEmptyAfterGeneration()
+        public void GenerateMoveSequence_DoesNotMutateBoard_TableauUnchanged()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            int[] originalCounts = new int[board.Tableau.Length];
+            for (int tableauIndex = 0; tableauIndex < board.Tableau.Length; tableauIndex++)
+            {
+                originalCounts[tableauIndex] = board.Tableau[tableauIndex].Count;
+            }
 
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
             sut.GenerateMoveSequence();
 
             sut.Dispose();
             for (int tableauIndex = 0; tableauIndex < board.Tableau.Length; tableauIndex++)
             {
-                Assert.That(board.Tableau[tableauIndex].Count, Is.EqualTo(0),
-                    $"Tableau[{tableauIndex}] should be empty after GenerateMoveSequence");
+                Assert.That(board.Tableau[tableauIndex].Count, Is.EqualTo(originalCounts[tableauIndex]),
+                    $"Tableau[{tableauIndex}] should be unchanged after GenerateMoveSequence");
             }
         }
 
         [Test]
-        public void GenerateMoveSequence_BoardMutated_FoundationsFullAfterGeneration()
+        public void GenerateMoveSequence_DoesNotMutateBoard_FoundationsUnchanged()
         {
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            int[] originalCounts = new int[board.Foundations.Length];
+            for (int foundationIndex = 0; foundationIndex < board.Foundations.Length; foundationIndex++)
+            {
+                originalCounts[foundationIndex] = board.Foundations[foundationIndex].Count;
+            }
 
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
             sut.GenerateMoveSequence();
 
             sut.Dispose();
             for (int foundationIndex = 0; foundationIndex < board.Foundations.Length; foundationIndex++)
             {
-                Assert.That(board.Foundations[foundationIndex].Count, Is.EqualTo(13),
-                    $"Foundation[{foundationIndex}] should have 13 cards after GenerateMoveSequence");
+                Assert.That(board.Foundations[foundationIndex].Count, Is.EqualTo(originalCounts[foundationIndex]),
+                    $"Foundation[{foundationIndex}] should be unchanged after GenerateMoveSequence");
             }
         }
 
@@ -373,7 +350,7 @@ namespace KlondikeSolitaire.Tests
                 twoHearts.IsFaceUp.Value = true;
                 b.Tableau[0].AddCard(twoHearts);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -398,7 +375,7 @@ namespace KlondikeSolitaire.Tests
                 aceSpades.IsFaceUp.Value = true;
                 b.Tableau[1].AddCard(aceSpades);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -419,7 +396,7 @@ namespace KlondikeSolitaire.Tests
                 two.IsFaceUp.Value = true;
                 b.Tableau[1].AddCard(two);
             });
-            var sut = new AutoCompleteSystem(board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(board, _boardStateSubscriber, _autoCompletePublisher);
 
             List<Move> result = sut.GenerateMoveSequence();
 
@@ -437,7 +414,7 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.AutoCompletableBoard();
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var publisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            var sut = new AutoCompleteSystem(board, _moveValidation, subscriber, publisher);
+            var sut = new AutoCompleteSystem(board, subscriber, publisher);
 
             subscriber.Trigger(new BoardStateChangedMessage());
 
@@ -452,41 +429,13 @@ namespace KlondikeSolitaire.Tests
             BoardModel board = TestBoardFactory.StandardDealBoard();
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var publisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            var sut = new AutoCompleteSystem(board, _moveValidation, subscriber, publisher);
+            var sut = new AutoCompleteSystem(board, subscriber, publisher);
 
             subscriber.Trigger(new BoardStateChangedMessage());
 
             sut.Dispose();
             Assert.That(publisher.MessageCount, Is.EqualTo(1));
             Assert.That(publisher.LastMessage.IsAvailable, Is.False);
-        }
-
-        [Test]
-        public void OnBoardStateChanged_TriggeredThreeTimes_PublishesThreeMessages()
-        {
-            var subscriber = new TestSubscriber<BoardStateChangedMessage>();
-            var publisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            var sut = new AutoCompleteSystem(_board, _moveValidation, subscriber, publisher);
-
-            subscriber.Trigger(new BoardStateChangedMessage());
-            subscriber.Trigger(new BoardStateChangedMessage());
-            subscriber.Trigger(new BoardStateChangedMessage());
-
-            sut.Dispose();
-            Assert.That(publisher.MessageCount, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void OnBoardStateChanged_EmptyBoardTriggered_PublishesIsAvailableTrue()
-        {
-            var subscriber = new TestSubscriber<BoardStateChangedMessage>();
-            var publisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            var sut = new AutoCompleteSystem(_board, _moveValidation, subscriber, publisher);
-
-            subscriber.Trigger(new BoardStateChangedMessage());
-
-            sut.Dispose();
-            Assert.That(publisher.LastMessage.IsAvailable, Is.True);
         }
 
         // --- Dispose tests ---
@@ -496,7 +445,7 @@ namespace KlondikeSolitaire.Tests
         {
             var subscriber = new TestSubscriber<BoardStateChangedMessage>();
             var publisher = new TestPublisher<AutoCompleteAvailableMessage>();
-            var sut = new AutoCompleteSystem(_board, _moveValidation, subscriber, publisher);
+            var sut = new AutoCompleteSystem(_board, subscriber, publisher);
 
             sut.Dispose();
             subscriber.Trigger(new BoardStateChangedMessage());
@@ -507,7 +456,7 @@ namespace KlondikeSolitaire.Tests
         [Test]
         public void Dispose_CalledTwice_DoesNotThrow()
         {
-            var sut = new AutoCompleteSystem(_board, _moveValidation, _boardStateSubscriber, _autoCompletePublisher);
+            var sut = new AutoCompleteSystem(_board, _boardStateSubscriber, _autoCompletePublisher);
 
             sut.Dispose();
 

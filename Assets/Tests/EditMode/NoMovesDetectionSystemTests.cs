@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using NUnit.Framework;
@@ -9,7 +8,7 @@ namespace KlondikeSolitaire.Tests
     public sealed class NoMovesDetectionSystemTests
     {
         private BoardModel _board;
-        private MoveValidationSystem _moveValidation;
+        private MoveEnumerator _moveEnumerator;
         private GamePhaseModel _gamePhase;
         private TestSubscriber<BoardStateChangedMessage> _boardStateSubscriber;
         private TestPublisher<NoMovesDetectedMessage> _noMovesPublisher;
@@ -19,13 +18,13 @@ namespace KlondikeSolitaire.Tests
         public void SetUp()
         {
             _board = TestBoardFactory.NoMovesBoard();
-            _moveValidation = new MoveValidationSystem();
+            _moveEnumerator = new MoveEnumerator(new MoveValidationSystem());
             _gamePhase = new GamePhaseModel();
             _boardStateSubscriber = new TestSubscriber<BoardStateChangedMessage>();
             _noMovesPublisher = new TestPublisher<NoMovesDetectedMessage>();
             _sut = new NoMovesDetectionSystem(
                 _board,
-                _moveValidation,
+                _moveEnumerator,
                 _gamePhase,
                 _boardStateSubscriber,
                 _noMovesPublisher);
@@ -35,43 +34,6 @@ namespace KlondikeSolitaire.Tests
         public void TearDown()
         {
             _sut.Dispose();
-        }
-
-        // --- Constructor null guard tests ---
-
-        [Test]
-        public void Constructor_NullBoard_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new NoMovesDetectionSystem(null, _moveValidation, _gamePhase, _boardStateSubscriber, _noMovesPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullMoveValidation_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new NoMovesDetectionSystem(_board, null, _gamePhase, _boardStateSubscriber, _noMovesPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullGamePhase_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new NoMovesDetectionSystem(_board, _moveValidation, null, _boardStateSubscriber, _noMovesPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullBoardStateSubscriber_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new NoMovesDetectionSystem(_board, _moveValidation, _gamePhase, null, _noMovesPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullNoMovesPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new NoMovesDetectionSystem(_board, _moveValidation, _gamePhase, _boardStateSubscriber, null));
         }
 
         // --- Playing phase: publishes when no valid moves ---
@@ -100,7 +62,7 @@ namespace KlondikeSolitaire.Tests
                 CardModel stockCard = new CardModel(Suit.Hearts, Rank.Ace);
                 b.Stock.AddCard(stockCard);
             });
-            var sut = new NoMovesDetectionSystem(board, _moveValidation, _gamePhase, _boardStateSubscriber, _noMovesPublisher);
+            var sut = new NoMovesDetectionSystem(board, _moveEnumerator, _gamePhase, _boardStateSubscriber, _noMovesPublisher);
             _gamePhase.Phase.Value = GamePhase.Playing;
 
             // Act
@@ -126,7 +88,7 @@ namespace KlondikeSolitaire.Tests
                 redEight.IsFaceUp.Value = true;
                 b.Tableau[1].AddCard(redEight);
             });
-            var sut = new NoMovesDetectionSystem(board, _moveValidation, _gamePhase, _boardStateSubscriber, _noMovesPublisher);
+            var sut = new NoMovesDetectionSystem(board, _moveEnumerator, _gamePhase, _boardStateSubscriber, _noMovesPublisher);
             _gamePhase.Phase.Value = GamePhase.Playing;
 
             // Act

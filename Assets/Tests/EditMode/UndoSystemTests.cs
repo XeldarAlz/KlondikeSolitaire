@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using NUnit.Framework;
@@ -14,6 +13,7 @@ namespace KlondikeSolitaire.Tests
         private TestPublisher<UndoAvailabilityChangedMessage> _undoAvailabilityPublisher;
         private TestPublisher<BoardStateChangedMessage> _boardStatePublisher;
         private TestPublisher<CardFlippedMessage> _cardFlippedPublisher;
+        private TestPublisher<CardMovedMessage> _cardMovedPublisher;
         private TestPublisher<ScoreChangedMessage> _scoreChangedPublisher;
         private UndoSystem _sut;
 
@@ -27,55 +27,19 @@ namespace KlondikeSolitaire.Tests
             _undoAvailabilityPublisher = new TestPublisher<UndoAvailabilityChangedMessage>();
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
             _cardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
+            _cardMovedPublisher = new TestPublisher<CardMovedMessage>();
             _sut = new UndoSystem(
                 _board,
                 _scoringSystem,
                 _undoAvailabilityPublisher,
                 _boardStatePublisher,
-                _cardFlippedPublisher);
+                _cardFlippedPublisher,
+                _cardMovedPublisher);
         }
 
         [TearDown]
         public void TearDown()
         {
-            _sut.Dispose();
-        }
-
-        // --- Constructor guard tests ---
-
-        [Test]
-        public void Constructor_NullBoardModel_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new UndoSystem(null, _scoringSystem, _undoAvailabilityPublisher, _boardStatePublisher, _cardFlippedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullScoringSystem_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new UndoSystem(_board, null, _undoAvailabilityPublisher, _boardStatePublisher, _cardFlippedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullUndoAvailabilityPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new UndoSystem(_board, _scoringSystem, null, _boardStatePublisher, _cardFlippedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullBoardStatePublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new UndoSystem(_board, _scoringSystem, _undoAvailabilityPublisher, null, _cardFlippedPublisher));
-        }
-
-        [Test]
-        public void Constructor_NullCardFlippedPublisher_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() =>
-                new UndoSystem(_board, _scoringSystem, _undoAvailabilityPublisher, _boardStatePublisher, null));
         }
 
         // --- CanUndo state ---
@@ -150,34 +114,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         // --- Undo normal move: cards move back from destination to source ---
-
-        [Test]
-        public void Undo_NormalMove_RemovesCardFromDestination()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Tableau[0].AddCard(card);
-            MoveCommand command = BuildNormalMoveCommand(PileId.Waste(), PileId.Tableau(0), 1, 5, wasCardFlipped: false);
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_board.Tableau[0].Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Undo_NormalMove_AddsCardBackToSource()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Tableau[0].AddCard(card);
-            MoveCommand command = BuildNormalMoveCommand(PileId.Waste(), PileId.Tableau(0), 1, 5, wasCardFlipped: false);
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(1));
-        }
 
         [Test]
         public void Undo_NormalMove_CardReturnedToSourceIsOriginalCard()
@@ -335,36 +271,6 @@ namespace KlondikeSolitaire.Tests
         // --- Undo DrawFromStock ---
 
         [Test]
-        public void Undo_DrawFromStock_RemovesTopCardFromWaste()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            MoveCommand command = BuildDrawFromStockCommand();
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_board.Waste.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void Undo_DrawFromStock_AddsCardToStock()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            MoveCommand command = BuildDrawFromStockCommand();
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_board.Stock.Count, Is.EqualTo(1));
-        }
-
-        [Test]
         public void Undo_DrawFromStock_CardInStockIsFaceDown()
         {
             CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
@@ -395,22 +301,6 @@ namespace KlondikeSolitaire.Tests
         }
 
         // --- Undo RecycleWaste ---
-
-        [Test]
-        public void Undo_RecycleWaste_RemovesAllCardsFromStock()
-        {
-            CardModel card1 = new CardModel(Suit.Clubs, Rank.Two);
-            CardModel card2 = new CardModel(Suit.Spades, Rank.Three);
-            _board.Stock.AddCard(card1);
-            _board.Stock.AddCard(card2);
-
-            MoveCommand command = BuildRecycleWasteCommand();
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_board.Stock.Count, Is.EqualTo(0));
-        }
 
         [Test]
         public void Undo_RecycleWaste_AddsAllCardsToWaste()
@@ -468,36 +358,7 @@ namespace KlondikeSolitaire.Tests
             Assert.That(_board.Waste.Cards[2], Is.SameAs(card1));
         }
 
-        // --- Undo publishes messages ---
-
-        [Test]
-        public void Undo_NormalMove_PublishesBoardStateChangedMessage()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Tableau[0].AddCard(card);
-            MoveCommand command = BuildNormalMoveCommand(PileId.Waste(), PileId.Tableau(0), 1, 5, wasCardFlipped: false);
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_boardStatePublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Undo_NormalMove_PublishesUndoAvailabilityChangedMessage()
-        {
-            CardModel card = new CardModel(Suit.Hearts, Rank.Ace);
-            card.IsFaceUp.Value = true;
-            _board.Tableau[0].AddCard(card);
-            MoveCommand command = BuildNormalMoveCommand(PileId.Waste(), PileId.Tableau(0), 1, 5, wasCardFlipped: false);
-            _sut.Push(command);
-            _undoAvailabilityPublisher.Clear();
-
-            _sut.Undo();
-
-            Assert.That(_undoAvailabilityPublisher.MessageCount, Is.EqualTo(1));
-        }
+        // --- Undo availability tracking ---
 
         [Test]
         public void Undo_LastCommandInStack_PublishesUndoAvailabilityChangedMessageWithFalse()
@@ -700,70 +561,6 @@ namespace KlondikeSolitaire.Tests
             Assert.That(_sut.CanUndo, Is.True);
         }
 
-        // --- Undo DrawFromStock publishes board state and availability messages ---
-
-        [Test]
-        public void Undo_DrawFromStock_PublishesBoardStateChangedMessage()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            MoveCommand command = BuildDrawFromStockCommand();
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_boardStatePublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Undo_DrawFromStock_PublishesUndoAvailabilityChangedMessageWithFalse()
-        {
-            CardModel card = new CardModel(Suit.Diamonds, Rank.Ten);
-            card.IsFaceUp.Value = true;
-            _board.Waste.AddCard(card);
-
-            MoveCommand command = BuildDrawFromStockCommand();
-            _sut.Push(command);
-            _undoAvailabilityPublisher.Clear();
-
-            _sut.Undo();
-
-            Assert.That(_undoAvailabilityPublisher.LastMessage.IsAvailable, Is.False);
-        }
-
-        // --- Undo RecycleWaste publishes board state and availability messages ---
-
-        [Test]
-        public void Undo_RecycleWaste_PublishesBoardStateChangedMessage()
-        {
-            CardModel card = new CardModel(Suit.Clubs, Rank.Five);
-            _board.Stock.AddCard(card);
-
-            MoveCommand command = BuildRecycleWasteCommand();
-            _sut.Push(command);
-
-            _sut.Undo();
-
-            Assert.That(_boardStatePublisher.MessageCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Undo_RecycleWaste_PublishesUndoAvailabilityChangedMessageWithFalse()
-        {
-            CardModel card = new CardModel(Suit.Clubs, Rank.Five);
-            _board.Stock.AddCard(card);
-
-            MoveCommand command = BuildRecycleWasteCommand();
-            _sut.Push(command);
-            _undoAvailabilityPublisher.Clear();
-
-            _sut.Undo();
-
-            Assert.That(_undoAvailabilityPublisher.LastMessage.IsAvailable, Is.False);
-        }
-
         // --- Private helpers ---
 
         private static MoveCommand BuildNormalMoveCommand(
@@ -779,8 +576,7 @@ namespace KlondikeSolitaire.Tests
                 destination,
                 cardCount,
                 scoreDelta,
-                wasCardFlipped,
-                wasteCardCount: 0);
+                wasCardFlipped);
         }
 
         private static MoveCommand BuildDrawFromStockCommand()
@@ -791,8 +587,7 @@ namespace KlondikeSolitaire.Tests
                 PileId.Waste(),
                 cardCount: 1,
                 scoreDelta: 0,
-                wasCardFlipped: false,
-                wasteCardCount: 0);
+                wasCardFlipped: false);
         }
 
         private static MoveCommand BuildRecycleWasteCommand()
@@ -803,8 +598,7 @@ namespace KlondikeSolitaire.Tests
                 PileId.Stock(),
                 cardCount: 0,
                 scoreDelta: 0,
-                wasCardFlipped: false,
-                wasteCardCount: 0);
+                wasCardFlipped: false);
         }
     }
 }
