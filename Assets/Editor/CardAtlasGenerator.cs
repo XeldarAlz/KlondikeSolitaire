@@ -10,11 +10,11 @@ namespace KlondikeSolitaire.Editor
     {
         private const string SourceRoot = "Assets/Art/Sprites/cards";
         private const string OutputFolder = "Assets/Art/Sprites/cards/generated";
-        private const int CardWidth = 512;
-        private const int CardHeight = 716;
+        private const int CardWidth = 109;
+        private const int CardHeight = 164;
         private const int BackStripHeightPercent = 11;
         private const int FaceStripHeightPercent = 26;
-        private const int FaceCardPixelsPerUnit = 512;
+        private const int FaceCardPixelsPerUnit = 109;
 
         private static readonly string[] SuitNames = { "hearts", "diamonds", "clubs", "spades" };
 
@@ -113,8 +113,8 @@ namespace KlondikeSolitaire.Editor
             EditorUtility.DisplayProgressBar("Card Atlas Generator", "Refreshing AssetDatabase...", 0.90f);
             AssetDatabase.Refresh();
 
-            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Configuring strip import settings...", 0.93f);
-            ConfigureStripImportSettings(faceStripPaths, backStripPath);
+            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Configuring import settings...", 0.93f);
+            ConfigureImportSettings(cardSpritePaths, faceStripPaths, backStripPath);
 
             EditorUtility.DisplayProgressBar("Card Atlas Generator", "Populating CardSpriteMapping...", 0.97f);
             PopulateCardSpriteMapping(cardSpritePaths, faceStripPaths, backStripPath);
@@ -336,17 +336,22 @@ namespace KlondikeSolitaire.Editor
             return outputPath;
         }
 
-        private static void ConfigureStripImportSettings(string[] faceStripPaths, string backStripPath)
+        private static void ConfigureImportSettings(string[] faceCardPaths, string[] faceStripPaths, string backStripPath)
         {
-            for (int spriteIndex = 0; spriteIndex < faceStripPaths.Length; spriteIndex++)
+            for (int spriteIndex = 0; spriteIndex < faceCardPaths.Length; spriteIndex++)
             {
-                ConfigureSingleStripImporter(faceStripPaths[spriteIndex]);
+                ConfigureSingleSpriteImporter(faceCardPaths[spriteIndex]);
             }
 
-            ConfigureSingleStripImporter(backStripPath);
+            for (int spriteIndex = 0; spriteIndex < faceStripPaths.Length; spriteIndex++)
+            {
+                ConfigureSingleSpriteImporter(faceStripPaths[spriteIndex]);
+            }
+
+            ConfigureSingleSpriteImporter(backStripPath);
         }
 
-        private static void ConfigureSingleStripImporter(string assetPath)
+        private static void ConfigureSingleSpriteImporter(string assetPath)
         {
             TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (importer == null)
