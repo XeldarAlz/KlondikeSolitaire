@@ -32,22 +32,54 @@ namespace KlondikeSolitaire.Systems
                 return true;
             }
 
-            PileId wasteId = PileId.Waste();
-            PileModel wastePile = board.Waste;
+            if (FindWasteToFoundationMoves(board, results, earlyExit)) return true;
+            if (FindWasteToTableauMoves(board, results, earlyExit)) return true;
+            if (FindTableauToFoundationMoves(board, results, earlyExit)) return true;
+            if (FindTableauToTableauMoves(board, results, earlyExit)) return true;
 
-            if (wastePile.Count > 0)
+            if (board.Stock.Count > 0)
             {
-                PileId canonicalFoundation = BoardModel.FoundationIdForSuit(wastePile.TopCard.Suit);
-                if (_validation.IsValidMove(board, wasteId, canonicalFoundation, 1))
+                if (earlyExit)
                 {
-                    if (earlyExit)
-                    {
-                        return true;
-                    }
-                    results.Add(new Move(wasteId, canonicalFoundation, 1));
+                    return true;
                 }
+                results.Add(new Move(PileId.Stock(), PileId.Waste(), 1));
             }
 
+            return !earlyExit && results.Count > 0;
+        }
+
+        private bool FindWasteToFoundationMoves(BoardModel board, List<Move> results, bool earlyExit)
+        {
+            PileModel wastePile = board.Waste;
+            if (wastePile.Count == 0)
+            {
+                return false;
+            }
+
+            PileId wasteId = PileId.Waste();
+            PileId canonicalFoundation = BoardModel.FoundationIdForSuit(wastePile.TopCard.Suit);
+            if (_validation.IsValidMove(board, wasteId, canonicalFoundation, 1))
+            {
+                if (earlyExit)
+                {
+                    return true;
+                }
+                results.Add(new Move(wasteId, canonicalFoundation, 1));
+            }
+
+            return false;
+        }
+
+        private bool FindWasteToTableauMoves(BoardModel board, List<Move> results, bool earlyExit)
+        {
+            PileModel wastePile = board.Waste;
+            if (wastePile.Count == 0)
+            {
+                return false;
+            }
+
+            PileId wasteId = PileId.Waste();
             for (int tableauIndex = 0; tableauIndex < BoardModel.TABLEAU_COUNT; tableauIndex++)
             {
                 PileId tableauId = PileId.Tableau(tableauIndex);
@@ -61,6 +93,11 @@ namespace KlondikeSolitaire.Systems
                 }
             }
 
+            return false;
+        }
+
+        private bool FindTableauToFoundationMoves(BoardModel board, List<Move> results, bool earlyExit)
+        {
             for (int sourceIndex = 0; sourceIndex < BoardModel.TABLEAU_COUNT; sourceIndex++)
             {
                 PileModel sourcePile = board.Tableau[sourceIndex];
@@ -81,6 +118,11 @@ namespace KlondikeSolitaire.Systems
                 }
             }
 
+            return false;
+        }
+
+        private bool FindTableauToTableauMoves(BoardModel board, List<Move> results, bool earlyExit)
+        {
             for (int sourceIndex = 0; sourceIndex < BoardModel.TABLEAU_COUNT; sourceIndex++)
             {
                 PileModel sourcePile = board.Tableau[sourceIndex];
@@ -90,7 +132,6 @@ namespace KlondikeSolitaire.Systems
                 }
 
                 PileId sourceId = PileId.Tableau(sourceIndex);
-
                 int firstFaceUpIndex = FindFirstFaceUpIndex(sourcePile);
                 if (firstFaceUpIndex < 0)
                 {
@@ -121,16 +162,7 @@ namespace KlondikeSolitaire.Systems
                 }
             }
 
-            if (board.Stock.Count > 0)
-            {
-                if (earlyExit)
-                {
-                    return true;
-                }
-                results.Add(new Move(PileId.Stock(), PileId.Waste(), 1));
-            }
-
-            return !earlyExit && results.Count > 0;
+            return false;
         }
 
         private int FindFirstFaceUpIndex(PileModel pile)
