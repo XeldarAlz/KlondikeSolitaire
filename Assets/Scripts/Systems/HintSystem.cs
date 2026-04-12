@@ -19,6 +19,7 @@ namespace KlondikeSolitaire.Systems
             BoardModel board,
             MoveEnumerator moveEnumerator,
             ISubscriber<BoardStateChangedMessage> boardStateSubscriber,
+            ISubscriber<HintRequestedMessage> hintRequestedSubscriber,
             IPublisher<HintHighlightMessage> hintHighlightPublisher,
             IPublisher<HintClearedMessage> hintClearedPublisher)
         {
@@ -30,6 +31,12 @@ namespace KlondikeSolitaire.Systems
             _hintIndex = -1;
             _disposables = new CompositeDisposable();
             boardStateSubscriber.Subscribe(OnBoardStateChanged).AddTo(_disposables);
+            hintRequestedSubscriber.Subscribe(OnHintRequested).AddTo(_disposables);
+        }
+
+        private void OnHintRequested(HintRequestedMessage _)
+        {
+            GetNextHint();
         }
 
         private void OnBoardStateChanged(BoardStateChangedMessage _)

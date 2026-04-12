@@ -32,7 +32,19 @@ namespace KlondikeSolitaire.Systems
 
         public void ExecuteMove(PileId source, PileId dest, int cardCount)
         {
+            if (source == dest)
+            {
+                return;
+            }
+
             PileModel sourcePile = _boardModel.GetPile(source);
+
+            if (sourcePile.Count < cardCount)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot move {cardCount} cards from {source}: pile only has {sourcePile.Count}");
+            }
+
             PileModel destPile = _boardModel.GetPile(dest);
 
             sourcePile.TransferTop(cardCount, destPile);
@@ -62,6 +74,12 @@ namespace KlondikeSolitaire.Systems
         public void DrawFromStock()
         {
             PileModel stock = _boardModel.Stock;
+
+            if (stock.Count == 0)
+            {
+                return;
+            }
+
             PileModel waste = _boardModel.Waste;
 
             CardModel drawnCard = stock.TopCard;
@@ -80,6 +98,12 @@ namespace KlondikeSolitaire.Systems
         public void RecycleWaste()
         {
             PileModel waste = _boardModel.Waste;
+
+            if (waste.Count == 0)
+            {
+                return;
+            }
+
             PileModel stock = _boardModel.Stock;
 
             int wasteCardCount = waste.Count;
@@ -96,7 +120,7 @@ namespace KlondikeSolitaire.Systems
             var command = new MoveCommand(MoveType.RecycleWaste, wasteId, stockId, wasteCardCount, 0, false);
             _undoSystem.Push(command);
 
-            _cardMovedPublisher.Publish(new CardMovedMessage(wasteId, stockId, wasteCardCount));
+            _cardMovedPublisher.Publish(new CardMovedMessage(wasteId, stockId, wasteCardCount, isReversed: true));
             _boardStatePublisher.Publish(new BoardStateChangedMessage());
         }
 

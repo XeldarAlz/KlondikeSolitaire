@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using KlondikeSolitaire.Core;
 using MessagePipe;
 
 namespace KlondikeSolitaire.Systems
 {
-    public sealed class UndoSystem
+    public sealed class UndoSystem : IDisposable
     {
         private readonly BoardModel _boardModel;
         private readonly ScoringSystem _scoringSystem;
@@ -13,12 +14,14 @@ namespace KlondikeSolitaire.Systems
         private readonly IPublisher<CardFlippedMessage> _cardFlippedPublisher;
         private readonly IPublisher<CardMovedMessage> _cardMovedPublisher;
         private readonly Stack<MoveCommand> _commandStack;
+        private readonly CompositeDisposable _disposables;
 
         public bool CanUndo => _commandStack.Count > 0;
 
         public UndoSystem(
             BoardModel boardModel,
             ScoringSystem scoringSystem,
+            ISubscriber<UndoRequestedMessage> undoRequestedSubscriber,
             IPublisher<UndoAvailabilityChangedMessage> undoAvailabilityPublisher,
             IPublisher<BoardStateChangedMessage> boardStatePublisher,
             IPublisher<CardFlippedMessage> cardFlippedPublisher,
@@ -31,6 +34,13 @@ namespace KlondikeSolitaire.Systems
             _cardFlippedPublisher = cardFlippedPublisher;
             _cardMovedPublisher = cardMovedPublisher;
             _commandStack = new Stack<MoveCommand>();
+            _disposables = new CompositeDisposable();
+            undoRequestedSubscriber.Subscribe(OnUndoRequested).AddTo(_disposables);
+        }
+
+        private void OnUndoRequested(UndoRequestedMessage _)
+        {
+            Undo();
         }
 
         public void Push(MoveCommand command)
@@ -116,7 +126,12 @@ namespace KlondikeSolitaire.Systems
                 wasteCards[cardIndex].IsFaceUp.Value = true;
             }
 
-            _cardMovedPublisher.Publish(new CardMovedMessage(PileId.Stock(), PileId.Waste(), cardCount));
+            _cardMovedPublisher.Publish(new CardMovedMessage(PileId.Stock(), PileId.Waste(), cardCount, isReversed: true));
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
         }
     }
 }

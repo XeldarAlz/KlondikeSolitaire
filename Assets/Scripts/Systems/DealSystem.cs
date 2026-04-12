@@ -16,27 +16,28 @@ namespace KlondikeSolitaire.Systems
 
         private readonly BoardModel _board;
         private readonly IPublisher<DealCompletedMessage> _dealCompletedPublisher;
-        private readonly Random _random;
         private readonly List<CardModel> _deck;
+        private readonly CardModel[] _canonicalOrder;
 
-        public DealSystem(BoardModel board, IPublisher<DealCompletedMessage> dealCompletedPublisher, Random random)
+        public DealSystem(BoardModel board, IPublisher<DealCompletedMessage> dealCompletedPublisher)
         {
             _board = board;
             _dealCompletedPublisher = dealCompletedPublisher;
-            _random = random;
             _deck = CreateDeck();
+            _canonicalOrder = new CardModel[_deck.Count];
+            _deck.CopyTo(_canonicalOrder);
         }
 
-        public void CreateDeal()
+        public void CreateDeal(int seed)
         {
             Reset();
             ResetDeck();
-            ShuffleDeck();
+            ShuffleDeck(new Random(seed));
 
             DealToTableau();
             DealToStock();
 
-            _dealCompletedPublisher.Publish(new DealCompletedMessage());
+            _dealCompletedPublisher.Publish(new DealCompletedMessage(seed));
         }
 
         public void Reset()
@@ -66,15 +67,16 @@ namespace KlondikeSolitaire.Systems
         {
             for (int cardIndex = 0; cardIndex < _deck.Count; cardIndex++)
             {
+                _deck[cardIndex] = _canonicalOrder[cardIndex];
                 _deck[cardIndex].IsFaceUp.Value = false;
             }
         }
 
-        private void ShuffleDeck()
+        private void ShuffleDeck(Random random)
         {
             for (int cardIndex = _deck.Count - 1; cardIndex > 0; cardIndex--)
             {
-                int randomIndex = _random.Next(cardIndex + 1);
+                int randomIndex = random.Next(cardIndex + 1);
 
                 CardModel temp = _deck[cardIndex];
                 _deck[cardIndex] = _deck[randomIndex];
