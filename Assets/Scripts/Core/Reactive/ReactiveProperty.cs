@@ -56,7 +56,13 @@ namespace KlondikeSolitaire.Core
                 _notificationDepth--;
                 if (_notificationDepth == 0)
                 {
-                    _subscribers.RemoveAll(static subscriber => subscriber == null);
+                    for (int subscriberIndex = _subscribers.Count - 1; subscriberIndex >= 0; subscriberIndex--)
+                    {
+                        if (_subscribers[subscriberIndex] == null)
+                        {
+                            _subscribers.RemoveAt(subscriberIndex);
+                        }
+                    }
                 }
             }
         }

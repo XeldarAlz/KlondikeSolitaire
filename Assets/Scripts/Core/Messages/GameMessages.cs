@@ -5,12 +5,14 @@ namespace KlondikeSolitaire.Core
         public PileId SourcePileId { get; }
         public PileId DestPileId { get; }
         public int CardCount { get; }
+        public bool IsReversed { get; }
 
-        public CardMovedMessage(PileId sourcePileId, PileId destPileId, int cardCount)
+        public CardMovedMessage(PileId sourcePileId, PileId destPileId, int cardCount, bool isReversed = false)
         {
             SourcePileId = sourcePileId;
             DestPileId = destPileId;
             CardCount = cardCount;
+            IsReversed = isReversed;
         }
     }
 
@@ -108,7 +110,29 @@ namespace KlondikeSolitaire.Core
     {
     }
 
+    public readonly struct UndoRequestedMessage
+    {
+    }
+
+    public readonly struct HintRequestedMessage
+    {
+    }
+
+    public readonly struct AutoCompleteRequestedMessage
+    {
+    }
+
     public readonly struct DealCompletedMessage
+    {
+        public int Seed { get; }
+
+        public DealCompletedMessage(int seed)
+        {
+            Seed = seed;
+        }
+    }
+
+    public readonly struct DealAnimationCompletedMessage
     {
     }
 }
