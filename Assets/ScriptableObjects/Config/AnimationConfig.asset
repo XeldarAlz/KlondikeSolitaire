@@ -17,5 +17,5 @@ MonoBehaviour:
   _dealDelay: 0.07
   _snapBackDuration: 0.25
   _shakeAmplitude: 0.15
-  _cascadeSpeed: 0.1
+  _cascadeSpeed: 1
   _autoCompleteDelay: 0.12
