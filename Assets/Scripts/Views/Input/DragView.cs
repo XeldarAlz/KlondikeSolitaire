@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using KlondikeSolitaire.Core;
 using UnityEngine;
 using VContainer;
 
@@ -43,8 +44,9 @@ namespace KlondikeSolitaire.Views
 
             for (int cardIndex = 0; cardIndex < count; cardIndex++)
             {
+                bool isLastCard = cardIndex == count - 1;
                 _originPositions[cardIndex] = cards[cardIndex].transform.position;
-                cards[cardIndex].SetStripMode(false);
+                cards[cardIndex].SetStripMode(!isLastCard);
                 cards[cardIndex].SetRendererEnabled(true);
                 cards[cardIndex].SetSortingOrder(cardIndex, DRAG_BASE_Z);
                 _dragOffsets[cardIndex] = cards[cardIndex].transform.position - pointerWorldPos;
@@ -55,11 +57,15 @@ namespace KlondikeSolitaire.Views
             if (revealIndex >= 0)
             {
                 CardView revealedCard = pileCards[revealIndex];
-                float alignOffset = revealedCard.StripAlignOffset;
                 revealedCard.SetRendererEnabled(true);
-                revealedCard.SetStripMode(false);
-                Vector3 pos = revealedCard.transform.position;
-                revealedCard.transform.position = new Vector3(pos.x, pos.y - alignOffset, pos.z);
+
+                if (originPile.PileId.Type == PileType.Tableau)
+                {
+                    float alignOffset = revealedCard.StripAlignOffset;
+                    revealedCard.SetStripMode(false);
+                    Vector3 pos = revealedCard.transform.position;
+                    revealedCard.transform.position = new Vector3(pos.x, pos.y - alignOffset, pos.z);
+                }
             }
 
             _isDragging = true;
