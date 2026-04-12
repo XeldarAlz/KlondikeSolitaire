@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KlondikeSolitaire.Views::KlondikeSolitaire.Views.AnimationConfig
   _moveDuration: 0.2
   _flipDuration: 0.25
-  _dealDelay: 0.07
+  _dealDelay: 0.03
   _snapBackDuration: 0.25
   _shakeAmplitude: 0.15
   _cascadeSpeed: 1

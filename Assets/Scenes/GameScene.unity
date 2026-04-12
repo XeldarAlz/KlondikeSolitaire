@@ -214,7 +214,6 @@ MonoBehaviour:
   _pileType: 2
   _pileIndex: 0
   _collider: {fileID: 61115810}
-  _baseRenderer: {fileID: 61115812}
 --- !u!212 &61115812
 SpriteRenderer:
   serializedVersion: 2
@@ -945,7 +944,6 @@ MonoBehaviour:
   _pileType: 2
   _pileIndex: 3
   _collider: {fileID: 452206877}
-  _baseRenderer: {fileID: 452206879}
 --- !u!212 &452206879
 SpriteRenderer:
   serializedVersion: 2
@@ -1100,7 +1098,6 @@ MonoBehaviour:
   _pileType: 2
   _pileIndex: 2
   _collider: {fileID: 481879959}
-  _baseRenderer: {fileID: 481879961}
 --- !u!212 &481879961
 SpriteRenderer:
   serializedVersion: 2
@@ -1471,7 +1468,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 2
   _collider: {fileID: 636774353}
-  _baseRenderer: {fileID: 636774355}
 --- !u!212 &636774355
 SpriteRenderer:
   serializedVersion: 2
@@ -2021,7 +2017,6 @@ MonoBehaviour:
   _pileType: 2
   _pileIndex: 1
   _collider: {fileID: 894954316}
-  _baseRenderer: {fileID: 894954318}
 --- !u!212 &894954318
 SpriteRenderer:
   serializedVersion: 2
@@ -2176,7 +2171,6 @@ MonoBehaviour:
   _pileType: 1
   _pileIndex: 0
   _collider: {fileID: 946051128}
-  _baseRenderer: {fileID: 946051130}
 --- !u!212 &946051130
 SpriteRenderer:
   serializedVersion: 2
@@ -2331,7 +2325,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 6
   _collider: {fileID: 957279298}
-  _baseRenderer: {fileID: 957279300}
 --- !u!212 &957279300
 SpriteRenderer:
   serializedVersion: 2
@@ -2775,7 +2768,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 0
   _collider: {fileID: 1177423207}
-  _baseRenderer: {fileID: 1177423209}
 --- !u!212 &1177423209
 SpriteRenderer:
   serializedVersion: 2
@@ -3474,7 +3466,6 @@ MonoBehaviour:
   _pileType: 0
   _pileIndex: 0
   _collider: {fileID: 1664894178}
-  _baseRenderer: {fileID: 1664894180}
 --- !u!212 &1664894180
 SpriteRenderer:
   serializedVersion: 2
@@ -4066,7 +4057,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 3
   _collider: {fileID: 1800862219}
-  _baseRenderer: {fileID: 1800862221}
 --- !u!212 &1800862221
 SpriteRenderer:
   serializedVersion: 2
@@ -4252,7 +4242,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 5
   _collider: {fileID: 1909814840}
-  _baseRenderer: {fileID: 1909814842}
 --- !u!212 &1909814842
 SpriteRenderer:
   serializedVersion: 2
@@ -4544,7 +4533,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 4
   _collider: {fileID: 1969849989}
-  _baseRenderer: {fileID: 1969849991}
 --- !u!212 &1969849991
 SpriteRenderer:
   serializedVersion: 2
@@ -5185,7 +5173,6 @@ MonoBehaviour:
   _pileType: 3
   _pileIndex: 1
   _collider: {fileID: 2143994243}
-  _baseRenderer: {fileID: 2143994245}
 --- !u!212 &2143994245
 SpriteRenderer:
   serializedVersion: 2
