@@ -120,4 +120,4 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 82c19af5042ef4d6782fedafefb376b8, type: 3}
   _backSprite: {fileID: 21300000, guid: 29ef8812b58fadc46a83f2001a67ede4, type: 3}
   _backStripSprite: {fileID: 21300000, guid: dd9037d49d5a840a289d1a651057a981, type: 3}
-  _baseSprite: {fileID: 21300000, guid: 62d13fb717728564c9bbf143d7caeb31, type: 3}
+  _baseSprite: {fileID: 0}
