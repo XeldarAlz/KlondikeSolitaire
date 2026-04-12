@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: InputConfig
   m_EditorClassIdentifier: KlondikeSolitaire.Views::KlondikeSolitaire.Views.InputConfig
   _dragStartThreshold: 10
-  _doubleTapWindow: 300
-  _tapMaxDuration: 200
+  _doubleTapWindow: 0.3
+  _tapMaxDuration: 0.2
