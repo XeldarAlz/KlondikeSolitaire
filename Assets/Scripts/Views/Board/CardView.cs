@@ -96,6 +96,18 @@ namespace KlondikeSolitaire.Views
             {
                 _spriteRenderer.sprite = _isStripMode ? _backStripSprite : _backSprite;
             }
+            UpdateCollider();
+        }
+
+        private void UpdateCollider()
+        {
+            Sprite sprite = _spriteRenderer.sprite;
+            if (sprite == null)
+            {
+                return;
+            }
+            _collider.size = sprite.bounds.size;
+            _collider.offset = sprite.bounds.center;
         }
 
         private void OnValidate()
