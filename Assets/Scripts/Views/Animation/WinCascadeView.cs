@@ -198,17 +198,10 @@ namespace KlondikeSolitaire.Views
             float rightBound,
             CancellationToken token)
         {
-            float screenHalfHeight = _mainCamera.orthographicSize;
-            float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
-            float startX = _mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * FOUNDATION_X_SPACING) - screenHalfWidth * FOUNDATION_X_OFFSET;
-            float startY = _mainCamera.transform.position.y + screenHalfHeight * LAUNCH_Y_FRACTION;
-
+            Vector2 currentPos = ComputeLaunchPosition(foundation);
             Vector2 velocity = new Vector2(directionSign * INITIAL_SPEED, INITIAL_SPEED * INITIAL_VERTICAL_SCALE);
-
             float elapsed = 0f;
-            Vector2 currentPos = new Vector2(startX, startY);
             float lastStampTime = -STAMP_INTERVAL;
-
             float cascadeSpeed = Mathf.Max(_config.CascadeSpeed, MIN_CASCADE_SPEED);
 
             Tween tween = Tween.Custom(
@@ -231,26 +224,7 @@ namespace KlondikeSolitaire.Views
                         return;
                     }
 
-                    velocity.y += GRAVITY * dt;
-                    currentPos.x += velocity.x * dt;
-                    currentPos.y += velocity.y * dt;
-
-                    if (currentPos.y < bottomBound)
-                    {
-                        currentPos.y = bottomBound;
-                        velocity.y = -velocity.y * BOUNCE_DAMPEN;
-                    }
-
-                    if (currentPos.x < leftBound)
-                    {
-                        currentPos.x = leftBound;
-                        velocity.x = -velocity.x;
-                    }
-                    else if (currentPos.x > rightBound)
-                    {
-                        currentPos.x = rightBound;
-                        velocity.x = -velocity.x;
-                    }
+                    StepCascadePhysics(dt, ref currentPos, ref velocity, bottomBound, leftBound, rightBound);
 
                     if (elapsed - lastStampTime >= STAMP_INTERVAL)
                     {
@@ -260,8 +234,46 @@ namespace KlondikeSolitaire.Views
                 });
 
             _activeTweens.Add(tween);
-
             await tween;
+        }
+
+        private Vector2 ComputeLaunchPosition(PileModel foundation)
+        {
+            float screenHalfHeight = _mainCamera.orthographicSize;
+            float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
+            float x = _mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * FOUNDATION_X_SPACING) - screenHalfWidth * FOUNDATION_X_OFFSET;
+            float y = _mainCamera.transform.position.y + screenHalfHeight * LAUNCH_Y_FRACTION;
+            return new Vector2(x, y);
+        }
+
+        private static void StepCascadePhysics(
+            float dt,
+            ref Vector2 position,
+            ref Vector2 velocity,
+            float bottomBound,
+            float leftBound,
+            float rightBound)
+        {
+            velocity.y += GRAVITY * dt;
+            position.x += velocity.x * dt;
+            position.y += velocity.y * dt;
+
+            if (position.y < bottomBound)
+            {
+                position.y = bottomBound;
+                velocity.y = -velocity.y * BOUNCE_DAMPEN;
+            }
+
+            if (position.x < leftBound)
+            {
+                position.x = leftBound;
+                velocity.x = -velocity.x;
+            }
+            else if (position.x > rightBound)
+            {
+                position.x = rightBound;
+                velocity.x = -velocity.x;
+            }
         }
 
         private void PlaceStamp(Sprite sprite, Vector3 position)

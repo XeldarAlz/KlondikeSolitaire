@@ -359,6 +359,17 @@ namespace KlondikeSolitaire.Views
         {
             int hitCount = Physics2D.OverlapPointNonAlloc(worldPos2D, _raycastBuffer);
 
+            PileView directHit = FindClosestPileViewHit(hitCount, worldPos2D);
+            if (directHit != null)
+            {
+                return directHit;
+            }
+
+            return FindPileViewViaCardHit(hitCount);
+        }
+
+        private PileView FindClosestPileViewHit(int hitCount, Vector2 worldPos2D)
+        {
             PileView closest = null;
             float closestDistance = float.MaxValue;
 
@@ -376,11 +387,11 @@ namespace KlondikeSolitaire.Views
                 }
             }
 
-            if (closest != null)
-            {
-                return closest;
-            }
+            return closest;
+        }
 
+        private PileView FindPileViewViaCardHit(int hitCount)
+        {
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
                 Collider2D col = _raycastBuffer[hitIndex];

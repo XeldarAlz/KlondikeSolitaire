@@ -99,6 +99,12 @@ namespace KlondikeSolitaire.Views
 
         private void AssignCardViewsToModel()
         {
+            MapCardViewsToModels();
+            DistributeCardViewsToPiles();
+        }
+
+        private void MapCardViewsToModels()
+        {
             _cardViewMap.Clear();
             _cardPileMap.Clear();
 
@@ -128,7 +134,11 @@ namespace KlondikeSolitaire.Views
                     _cardPileMap[cardModel] = pile.Id;
                 }
             }
+        }
 
+        private void DistributeCardViewsToPiles()
+        {
+            PileModel[] allPiles = _model.AllPiles;
             for (int pileIndex = 0; pileIndex < allPiles.Length; pileIndex++)
             {
                 PileModel pile = allPiles[pileIndex];
@@ -148,8 +158,23 @@ namespace KlondikeSolitaire.Views
         private async UniTaskVoid PlayDealAnimationAsync(CancellationToken cancellationToken)
         {
             PileView stockView = GetPileView(PileId.Stock());
-            Vector3 stockPosition = stockView.transform.position;
+            ResetCardsForDeal(stockView.transform.position);
+            stockView.UpdateCardPositions();
 
+            List<UniTask> dealTasks = BuildDealAnimationTasks(cancellationToken);
+            await UniTask.WhenAll(dealTasks);
+
+            PileModel[] allPiles = _model.AllPiles;
+            for (int pileIndex = 0; pileIndex < allPiles.Length; pileIndex++)
+            {
+                GetPileView(allPiles[pileIndex].Id).UpdateCardPositions();
+            }
+
+            _dealAnimCompletedPublisher.Publish(new DealAnimationCompletedMessage());
+        }
+
+        private void ResetCardsForDeal(Vector3 stockPosition)
+        {
             for (int cardViewIndex = 0; cardViewIndex < _cardViews.Length; cardViewIndex++)
             {
                 CardView cardView = _cardViews[cardViewIndex];
@@ -161,9 +186,10 @@ namespace KlondikeSolitaire.Views
                     cardView.transform.position = stockPosition;
                 }
             }
+        }
 
-            GetPileView(PileId.Stock()).UpdateCardPositions();
-
+        private List<UniTask> BuildDealAnimationTasks(CancellationToken cancellationToken)
+        {
             var dealTasks = new List<UniTask>();
             float cumulativeDelay = 0f;
 
@@ -208,15 +234,7 @@ namespace KlondikeSolitaire.Views
                 }
             }
 
-            await UniTask.WhenAll(dealTasks);
-
-            PileModel[] allPiles = _model.AllPiles;
-            for (int pileIndex = 0; pileIndex < allPiles.Length; pileIndex++)
-            {
-                GetPileView(allPiles[pileIndex].Id).UpdateCardPositions();
-            }
-
-            _dealAnimCompletedPublisher.Publish(new DealAnimationCompletedMessage());
+            return dealTasks;
         }
 
         private async UniTask DealCardAndStripPreviousAsync(
@@ -364,31 +382,36 @@ namespace KlondikeSolitaire.Views
 
             if (message.NewPhase == GamePhase.Dealing)
             {
-                CancelAndDispose(ref _dealCts);
-                CancelAndDispose(ref _autoCompleteCts);
-                CancelAndDispose(ref _moveAnimCts);
-
-                _animator.KillAllOnTargets(_cardViews);
-
-                for (int cardIndex = 0; cardIndex < _cardViews.Length; cardIndex++)
-                {
-                    CardView cardView = _cardViews[cardIndex];
-                    cardView.transform.SetParent(_cardPoolParent);
-                    cardView.transform.localScale = Vector3.one;
-                    cardView.gameObject.SetActive(false);
-                }
-
-                _cardViewMap.Clear();
-                _cardPileMap.Clear();
-
-                for (int pileIndex = 0; pileIndex < _pileViews.Length; pileIndex++)
-                {
-                    _pileViews[pileIndex].ClearCards();
-                }
+                CleanupForNewDeal();
             }
             else if (message.NewPhase == GamePhase.AutoCompleting)
             {
                 RunAutoCompleteAsync().Forget();
+            }
+        }
+
+        private void CleanupForNewDeal()
+        {
+            CancelAndDispose(ref _dealCts);
+            CancelAndDispose(ref _autoCompleteCts);
+            CancelAndDispose(ref _moveAnimCts);
+
+            _animator.KillAllOnTargets(_cardViews);
+
+            for (int cardIndex = 0; cardIndex < _cardViews.Length; cardIndex++)
+            {
+                CardView cardView = _cardViews[cardIndex];
+                cardView.transform.SetParent(_cardPoolParent);
+                cardView.transform.localScale = Vector3.one;
+                cardView.gameObject.SetActive(false);
+            }
+
+            _cardViewMap.Clear();
+            _cardPileMap.Clear();
+
+            for (int pileIndex = 0; pileIndex < _pileViews.Length; pileIndex++)
+            {
+                _pileViews[pileIndex].ClearCards();
             }
         }
 
