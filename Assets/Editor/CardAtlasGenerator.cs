@@ -12,7 +12,7 @@ namespace KlondikeSolitaire.Editor
         private const string OutputFolder = "Assets/Art/Sprites/cards/generated";
         private const int CardWidth = 109;
         private const int CardHeight = 164;
-        private const int BackStripHeightPercent = 11;
+        private const int BackStripHeightPercent = 20;
         private const int FaceStripHeightPercent = 26;
         private const int FaceCardPixelsPerUnit = 109;
 
