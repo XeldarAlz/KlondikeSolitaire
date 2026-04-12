@@ -12,27 +12,35 @@ namespace KlondikeSolitaire.Views
 {
     public sealed class WinCascadeView : MonoBehaviour
     {
-        [SerializeField] private GameObject _cascadeStampPrefab;
+        [SerializeField] private SpriteRenderer _cascadeStampPrefab;
         [SerializeField] private Transform _stampPoolParent;
 
         private AnimationConfig _config;
         private BoardModel _boardModel;
         private CardSpriteMapping _spriteMapping;
 
-        private const int STAMP_POOL_SIZE = 150;
-        private const float GRAVITY = -9.8f;
-        private const float BOUNCE_DAMPEN = 0.65f;
-        private const float STAMP_INTERVAL = 0.08f;
-        private const float CARD_LAUNCH_DELAY = 0.12f;
-        private const float CARD_TWEEN_DURATION = 4.0f;
-        private const float INITIAL_SPEED = 5.5f;
+        private const int STAMP_POOL_SIZE = 104;
+        private const float GRAVITY = -14f;
+        private const float BOUNCE_DAMPEN = 0.72f;
+        private const float STAMP_INTERVAL = 0.12f;
+        private const float CARD_LAUNCH_DELAY = 0.45f;
+        private const float CARD_TWEEN_DURATION = 3.0f;
+        private const float INITIAL_SPEED = 6.5f;
+        private const float STAMP_LIFETIME = 0.8f;
+        private const float MIN_CASCADE_SPEED = 0.8f;
+        private const float FOUNDATION_X_SPACING = 0.3f;
+        private const float FOUNDATION_X_OFFSET = 0.6f;
+        private const float LAUNCH_Y_FRACTION = 0.3f;
+        private const float INITIAL_VERTICAL_SCALE = 0.8f;
 
         private Camera _mainCamera;
         private int _cascadeLayerId;
 
         private readonly SpriteRenderer[] _stampRenderers = new SpriteRenderer[STAMP_POOL_SIZE];
         private readonly GameObject[] _stampObjects = new GameObject[STAMP_POOL_SIZE];
+        private readonly float[] _stampBirthTime = new float[STAMP_POOL_SIZE];
         private int _nextStampIndex;
+        private bool _isCascading;
 
         private CancellationTokenSource _cascadeCts;
 
@@ -61,11 +69,41 @@ namespace KlondikeSolitaire.Views
             _cascadeLayerId = SortingLayer.NameToID("Cascade");
             for (int stampIndex = 0; stampIndex < STAMP_POOL_SIZE; stampIndex++)
             {
-                GameObject instance = Instantiate(_cascadeStampPrefab, _stampPoolParent);
-                _stampObjects[stampIndex] = instance;
-                _stampRenderers[stampIndex] = instance.GetComponent<SpriteRenderer>();
-                _stampRenderers[stampIndex].sortingLayerID = _cascadeLayerId;
-                instance.SetActive(false);
+                SpriteRenderer renderer = Instantiate(_cascadeStampPrefab, _stampPoolParent);
+                _stampObjects[stampIndex] = renderer.gameObject;
+                _stampRenderers[stampIndex] = renderer;
+                renderer.sortingLayerID = _cascadeLayerId;
+                renderer.gameObject.SetActive(false);
+            }
+        }
+
+        private void Update()
+        {
+            if (!_isCascading)
+            {
+                return;
+            }
+
+            float now = Time.time;
+            for (int stampIndex = 0; stampIndex < STAMP_POOL_SIZE; stampIndex++)
+            {
+                if (!_stampObjects[stampIndex].activeSelf)
+                {
+                    continue;
+                }
+
+                float age = now - _stampBirthTime[stampIndex];
+                if (age > STAMP_LIFETIME)
+                {
+                    _stampObjects[stampIndex].SetActive(false);
+                    _stampRenderers[stampIndex].color = Color.white;
+                    continue;
+                }
+
+                float alpha = 1f - (age / STAMP_LIFETIME);
+                Color color = _stampRenderers[stampIndex].color;
+                color.a = alpha;
+                _stampRenderers[stampIndex].color = color;
             }
         }
 
@@ -97,6 +135,7 @@ namespace KlondikeSolitaire.Views
             CancellationToken token = _cascadeCts.Token;
 
             ResetStampPool();
+            _isCascading = true;
 
             float screenHalfHeight = _mainCamera.orthographicSize;
             float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
@@ -107,16 +146,33 @@ namespace KlondikeSolitaire.Views
 
             PileModel[] foundations = _boardModel.Foundations;
 
+            int maxCards = 0;
             for (int foundationIndex = 0; foundationIndex < foundations.Length; foundationIndex++)
             {
-                PileModel foundation = foundations[foundationIndex];
-                IReadOnlyList<CardModel> cards = foundation.Cards;
+                int count = foundations[foundationIndex].Cards.Count;
+                if (count > maxCards)
+                {
+                    maxCards = count;
+                }
+            }
 
-                for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+            for (int rankOffset = 0; rankOffset < maxCards; rankOffset++)
+            {
+                int cardIndex = maxCards - 1 - rankOffset;
+
+                for (int foundationIndex = 0; foundationIndex < foundations.Length; foundationIndex++)
                 {
                     if (token.IsCancellationRequested)
                     {
                         return;
+                    }
+
+                    PileModel foundation = foundations[foundationIndex];
+                    IReadOnlyList<CardModel> cards = foundation.Cards;
+
+                    if (cardIndex >= cards.Count)
+                    {
+                        continue;
                     }
 
                     CardModel card = cards[cardIndex];
@@ -124,7 +180,7 @@ namespace KlondikeSolitaire.Views
 
                     float directionSign = ((foundationIndex + cardIndex) % 2 == 0) ? 1f : -1f;
 
-                    LaunchCardAsync(cardSprite, foundations[foundationIndex], cardIndex, directionSign,
+                    LaunchCardAsync(cardSprite, foundation, cardIndex, directionSign,
                         bottomBound, leftBound, rightBound, token).Forget();
 
                     await UniTask.Delay(TimeSpan.FromSeconds(CARD_LAUNCH_DELAY), cancellationToken: token);
@@ -144,16 +200,16 @@ namespace KlondikeSolitaire.Views
         {
             float screenHalfHeight = _mainCamera.orthographicSize;
             float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
-            float startX = _mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * 0.3f) - screenHalfWidth * 0.6f;
-            float startY = _mainCamera.transform.position.y + screenHalfHeight * 0.3f;
+            float startX = _mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * FOUNDATION_X_SPACING) - screenHalfWidth * FOUNDATION_X_OFFSET;
+            float startY = _mainCamera.transform.position.y + screenHalfHeight * LAUNCH_Y_FRACTION;
 
-            Vector2 velocity = new Vector2(directionSign * INITIAL_SPEED, INITIAL_SPEED * 0.8f);
+            Vector2 velocity = new Vector2(directionSign * INITIAL_SPEED, INITIAL_SPEED * INITIAL_VERTICAL_SCALE);
 
             float elapsed = 0f;
             Vector2 currentPos = new Vector2(startX, startY);
             float lastStampTime = -STAMP_INTERVAL;
 
-            float cascadeSpeed = _config.CascadeSpeed > 0f ? _config.CascadeSpeed : 1f;
+            float cascadeSpeed = Mathf.Max(_config.CascadeSpeed, MIN_CASCADE_SPEED);
 
             Tween tween = Tween.Custom(
                 this,
@@ -199,7 +255,7 @@ namespace KlondikeSolitaire.Views
                     if (elapsed - lastStampTime >= STAMP_INTERVAL)
                     {
                         lastStampTime = elapsed;
-                        PlaceStamp(sprite, new Vector3(currentPos.x, currentPos.y, 0f), cardIndex);
+                        PlaceStamp(sprite, new Vector3(currentPos.x, currentPos.y, 0f));
                     }
                 });
 
@@ -208,23 +264,25 @@ namespace KlondikeSolitaire.Views
             await tween;
         }
 
-        private void PlaceStamp(Sprite sprite, Vector3 position, int sortingOrderOffset)
+        private void PlaceStamp(Sprite sprite, Vector3 position)
         {
             int stampIndex = _nextStampIndex % STAMP_POOL_SIZE;
-            _nextStampIndex++;
 
             GameObject stampObject = _stampObjects[stampIndex];
             SpriteRenderer stampRenderer = _stampRenderers[stampIndex];
 
             stampRenderer.sprite = sprite;
-            stampRenderer.sortingLayerID = _cascadeLayerId;
-            stampRenderer.sortingOrder = sortingOrderOffset;
+            stampRenderer.color = Color.white;
+            _stampBirthTime[stampIndex] = Time.time;
             stampObject.transform.position = position;
             stampObject.SetActive(true);
+
+            _nextStampIndex++;
         }
 
         public void StopCascade()
         {
+            _isCascading = false;
             _cascadeCts?.Cancel();
             _cascadeCts?.Dispose();
             _cascadeCts = null;
