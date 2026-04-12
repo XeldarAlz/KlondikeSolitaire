@@ -8,7 +8,7 @@ Proje **9 fazda**, **45 görev** ve **335 test** ile tamamlandı — tüm testle
 
 | Metrik | Değer |
 |--------|-------|
-| FPS | ~1,148 |
+| FPS | + ~1000 |
 | Draw Call | 5 |
 | Batch | 5 (40 saved by batching) |
 | CPU (main) | ~0.9 ms |
