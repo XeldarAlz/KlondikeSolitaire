@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: LayoutConfig
   m_EditorClassIdentifier: KlondikeSolitaire.Views::KlondikeSolitaire.Views.LayoutConfig
   _cardSize: {x: 1, y: 1.4}
-  _faceDownYOffset: 0.165
-  _faceUpYOffset: 0.35
+  _faceDownYOffset: 0.25
+  _faceUpYOffset: 0.3
