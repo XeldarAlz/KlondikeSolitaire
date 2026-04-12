@@ -10,6 +10,7 @@ namespace KlondikeSolitaire.Tests
         private BoardModel _board;
         private ScoreModel _scoreModel;
         private ScoringSystem _scoringSystem;
+        private TestSubscriber<UndoRequestedMessage> _undoRequestedSubscriber;
         private TestPublisher<UndoAvailabilityChangedMessage> _undoAvailabilityPublisher;
         private TestPublisher<BoardStateChangedMessage> _boardStatePublisher;
         private TestPublisher<CardFlippedMessage> _cardFlippedPublisher;
@@ -24,6 +25,7 @@ namespace KlondikeSolitaire.Tests
             _scoreModel = new ScoreModel();
             _scoreChangedPublisher = new TestPublisher<ScoreChangedMessage>();
             _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(5, 10, 10, -15, 5), _scoreChangedPublisher);
+            _undoRequestedSubscriber = new TestSubscriber<UndoRequestedMessage>();
             _undoAvailabilityPublisher = new TestPublisher<UndoAvailabilityChangedMessage>();
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
             _cardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
@@ -31,6 +33,7 @@ namespace KlondikeSolitaire.Tests
             _sut = new UndoSystem(
                 _board,
                 _scoringSystem,
+                _undoRequestedSubscriber,
                 _undoAvailabilityPublisher,
                 _boardStatePublisher,
                 _cardFlippedPublisher,
@@ -40,6 +43,7 @@ namespace KlondikeSolitaire.Tests
         [TearDown]
         public void TearDown()
         {
+            _sut.Dispose();
         }
 
         // --- CanUndo state ---

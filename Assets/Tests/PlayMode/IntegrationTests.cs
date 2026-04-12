@@ -32,6 +32,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
         private TestBoardStateSubscriber _boardStateSubscriber;
         private TestNoMovesSubscriber _noMovesSubscriber;
         private TestNewGameSubscriber _newGameSubscriber;
+        private TestDealAnimCompletedSubscriber _dealAnimCompletedSubscriber;
 
         private MoveValidationSystem _moveValidation;
         private MoveEnumerator _moveEnumerator;
@@ -68,6 +69,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
             _boardStateSubscriber = new TestBoardStateSubscriber();
             _noMovesSubscriber = new TestNoMovesSubscriber();
             _newGameSubscriber = new TestNewGameSubscriber();
+            _dealAnimCompletedSubscriber = new TestDealAnimCompletedSubscriber();
 
             _moveValidation = new MoveValidationSystem();
             _moveEnumerator = new MoveEnumerator(_moveValidation);
@@ -78,14 +80,14 @@ namespace KlondikeSolitaire.Tests.PlayMode
             _undoSystem = new UndoSystem(
                 _board,
                 _scoringSystem,
+                new NoOpSubscriber<UndoRequestedMessage>(),
                 new TypedPublisher<UndoAvailabilityChangedMessage>(_undoAvailabilityPublisher),
                 new TypedPublisher<BoardStateChangedMessage>(_boardStatePublisher),
                 new TypedPublisher<CardFlippedMessage>(_cardFlippedPublisher),
                 new TypedPublisher<CardMovedMessage>(_cardMovedPublisher));
             _dealSystem = new DealSystem(
                 _board,
-                new TypedPublisher<DealCompletedMessage>(_dealCompletedPublisher),
-                new System.Random(42));
+                new TypedPublisher<DealCompletedMessage>(_dealCompletedPublisher));
             _moveExecution = new MoveExecutionSystem(
                 _board,
                 _scoringSystem,
@@ -97,6 +99,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
                 _board,
                 _moveEnumerator,
                 _boardStateSubscriber,
+                new NoOpSubscriber<HintRequestedMessage>(),
                 new TypedPublisher<HintHighlightMessage>(_hintHighlightPublisher),
                 new TypedPublisher<HintClearedMessage>(_hintClearedPublisher));
             _autoComplete = new AutoCompleteSystem(
@@ -111,15 +114,19 @@ namespace KlondikeSolitaire.Tests.PlayMode
                 new TypedPublisher<NoMovesDetectedMessage>(_noMovesPublisher));
             _gameFlow = new GameFlowSystem(
                 _gamePhaseModel,
+                new DealModel(),
                 _dealSystem,
                 _board,
                 _scoreModel,
                 _scoringSystem,
                 _undoSystem,
                 _hintSystem,
+                new System.Random(42),
                 _boardStateSubscriber,
                 _noMovesSubscriber,
                 _newGameSubscriber,
+                new NoOpSubscriber<AutoCompleteRequestedMessage>(),
+                _dealAnimCompletedSubscriber,
                 new TypedPublisher<GamePhaseChangedMessage>(_gamePhaseChangedPublisher),
                 new TypedPublisher<WinDetectedMessage>(_winDetectedPublisher));
         }
@@ -131,6 +138,7 @@ namespace KlondikeSolitaire.Tests.PlayMode
             _noMovesDetection.Dispose();
             _autoComplete.Dispose();
             _hintSystem.Dispose();
+            _undoSystem.Dispose();
         }
 
         // --- Full game flow: deal → execute moves → verify score updates ---
@@ -173,9 +181,19 @@ namespace KlondikeSolitaire.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FullGameFlow_DealCards_GamePhaseIsPlaying()
+        public IEnumerator FullGameFlow_DealCards_GamePhaseIsDealingBeforeAnimationCompletes()
         {
             _gameFlow.StartNewGame();
+            yield return null;
+
+            Assert.That(_gamePhaseModel.Phase.Value, Is.EqualTo(GamePhase.Dealing));
+        }
+
+        [UnityTest]
+        public IEnumerator FullGameFlow_DealAnimationCompleted_GamePhaseIsPlaying()
+        {
+            _gameFlow.StartNewGame();
+            _dealAnimCompletedSubscriber.Trigger();
             yield return null;
 
             Assert.That(_gamePhaseModel.Phase.Value, Is.EqualTo(GamePhase.Playing));
@@ -803,6 +821,34 @@ namespace KlondikeSolitaire.Tests.PlayMode
         public void Trigger()
         {
             _handler?.Invoke(new NewGameRequestedMessage());
+        }
+    }
+
+    internal sealed class TestDealAnimCompletedSubscriber : MessagePipe.ISubscriber<DealAnimationCompletedMessage>
+    {
+        private System.Action<DealAnimationCompletedMessage> _handler;
+
+        public IDisposable Subscribe(
+            MessagePipe.IMessageHandler<DealAnimationCompletedMessage> handler,
+            params MessagePipe.MessageHandlerFilter<DealAnimationCompletedMessage>[] filters)
+        {
+            _handler = handler.Handle;
+            return new TestDisposableInternal(() => _handler = null);
+        }
+
+        public void Trigger()
+        {
+            _handler?.Invoke(new DealAnimationCompletedMessage());
+        }
+    }
+
+    internal sealed class NoOpSubscriber<T> : MessagePipe.ISubscriber<T>
+    {
+        public IDisposable Subscribe(
+            MessagePipe.IMessageHandler<T> handler,
+            params MessagePipe.MessageHandlerFilter<T>[] filters)
+        {
+            return new TestDisposableInternal(() => { });
         }
     }
 

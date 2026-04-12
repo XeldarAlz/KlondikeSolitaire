@@ -31,10 +31,12 @@ namespace KlondikeSolitaire.Tests
             _boardStatePublisher = new TestPublisher<BoardStateChangedMessage>();
             _undoCardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
 
+            var undoRequestedSubscriber = new TestSubscriber<UndoRequestedMessage>();
             var undoCardMovedPublisher = new TestPublisher<CardMovedMessage>();
             _undoSystem = new UndoSystem(
                 _board,
                 _scoringSystem,
+                undoRequestedSubscriber,
                 _undoAvailabilityPublisher,
                 _boardStatePublisher,
                 _undoCardFlippedPublisher,

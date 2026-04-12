@@ -8,15 +8,19 @@ namespace KlondikeSolitaire.Tests
     public sealed class GameFlowSystemTests
     {
         private GamePhaseModel _gamePhase;
+        private DealModel _dealModel;
         private BoardModel _board;
         private ScoreModel _scoreModel;
         private ScoringSystem _scoringSystem;
         private DealSystem _dealSystem;
         private UndoSystem _undoSystem;
         private HintSystem _hintSystem;
+        private System.Random _random;
         private TestSubscriber<BoardStateChangedMessage> _boardStateSubscriber;
         private TestSubscriber<NoMovesDetectedMessage> _noMovesSubscriber;
         private TestSubscriber<NewGameRequestedMessage> _newGameSubscriber;
+        private TestSubscriber<AutoCompleteRequestedMessage> _autoCompleteSubscriber;
+        private TestSubscriber<DealAnimationCompletedMessage> _dealAnimCompletedSubscriber;
         private TestPublisher<GamePhaseChangedMessage> _phaseChangedPublisher;
         private TestPublisher<WinDetectedMessage> _winDetectedPublisher;
         private TestPublisher<DealCompletedMessage> _dealCompletedPublisher;
@@ -26,11 +30,13 @@ namespace KlondikeSolitaire.Tests
         public void SetUp()
         {
             _gamePhase = new GamePhaseModel();
+            _dealModel = new DealModel();
             _board = TestBoardFactory.EmptyBoard();
             _scoreModel = new ScoreModel();
+            _random = new System.Random(42);
 
             _dealCompletedPublisher = new TestPublisher<DealCompletedMessage>();
-            _dealSystem = new DealSystem(_board, _dealCompletedPublisher, new System.Random(42));
+            _dealSystem = new DealSystem(_board, _dealCompletedPublisher);
 
             var scoreChangedPublisher = new TestPublisher<ScoreChangedMessage>();
             _scoringSystem = new ScoringSystem(_scoreModel, new ScoringTable(5, 10, 10, -15, 5), scoreChangedPublisher);
@@ -38,9 +44,11 @@ namespace KlondikeSolitaire.Tests
             var boardStateForUndo = new TestPublisher<BoardStateChangedMessage>();
             var cardFlippedPublisher = new TestPublisher<CardFlippedMessage>();
             var cardMovedPublisher = new TestPublisher<CardMovedMessage>();
+            var undoRequestedSubscriber = new TestSubscriber<UndoRequestedMessage>();
             _undoSystem = new UndoSystem(
                 _board,
                 _scoringSystem,
+                undoRequestedSubscriber,
                 undoAvailabilityPublisher,
                 boardStateForUndo,
                 cardFlippedPublisher,
@@ -50,16 +58,20 @@ namespace KlondikeSolitaire.Tests
             var boardStateForHint = new TestSubscriber<BoardStateChangedMessage>();
             var hintHighlightPublisher = new TestPublisher<HintHighlightMessage>();
             var hintClearedPublisher = new TestPublisher<HintClearedMessage>();
+            var hintRequestedSubscriber = new TestSubscriber<HintRequestedMessage>();
             _hintSystem = new HintSystem(
                 _board,
                 moveEnumerator,
                 boardStateForHint,
+                hintRequestedSubscriber,
                 hintHighlightPublisher,
                 hintClearedPublisher);
 
             _boardStateSubscriber = new TestSubscriber<BoardStateChangedMessage>();
             _noMovesSubscriber = new TestSubscriber<NoMovesDetectedMessage>();
             _newGameSubscriber = new TestSubscriber<NewGameRequestedMessage>();
+            _autoCompleteSubscriber = new TestSubscriber<AutoCompleteRequestedMessage>();
+            _dealAnimCompletedSubscriber = new TestSubscriber<DealAnimationCompletedMessage>();
             _phaseChangedPublisher = new TestPublisher<GamePhaseChangedMessage>();
             _winDetectedPublisher = new TestPublisher<WinDetectedMessage>();
 
@@ -77,15 +89,19 @@ namespace KlondikeSolitaire.Tests
         {
             return new GameFlowSystem(
                 _gamePhase,
+                _dealModel,
                 _dealSystem,
                 _board,
                 _scoreModel,
                 _scoringSystem,
                 _undoSystem,
                 _hintSystem,
+                _random,
                 _boardStateSubscriber,
                 _noMovesSubscriber,
                 _newGameSubscriber,
+                _autoCompleteSubscriber,
+                _dealAnimCompletedSubscriber,
                 _phaseChangedPublisher,
                 _winDetectedPublisher);
         }
@@ -93,9 +109,29 @@ namespace KlondikeSolitaire.Tests
         // --- StartNewGame: phase transitions ---
 
         [Test]
-        public void StartNewGame_SetsPhaseToPlaying()
+        public void StartNewGame_SetsPhaseToDealing()
         {
             _sut.StartNewGame();
+
+            Assert.That(_gamePhase.Phase.Value, Is.EqualTo(GamePhase.Dealing));
+        }
+
+        [Test]
+        public void DealAnimationCompleted_DuringDealing_SetsPhaseToPlaying()
+        {
+            _sut.StartNewGame();
+
+            _dealAnimCompletedSubscriber.Trigger(new DealAnimationCompletedMessage());
+
+            Assert.That(_gamePhase.Phase.Value, Is.EqualTo(GamePhase.Playing));
+        }
+
+        [Test]
+        public void DealAnimationCompleted_NotDuringDealing_DoesNotChangePhase()
+        {
+            _gamePhase.Phase.Value = GamePhase.Playing;
+
+            _dealAnimCompletedSubscriber.Trigger(new DealAnimationCompletedMessage());
 
             Assert.That(_gamePhase.Phase.Value, Is.EqualTo(GamePhase.Playing));
         }
@@ -300,13 +336,13 @@ namespace KlondikeSolitaire.Tests
         // --- NewGameRequestedMessage triggers StartNewGame ---
 
         [Test]
-        public void OnNewGameRequested_SetsPhaseToPlaying()
+        public void OnNewGameRequested_SetsPhaseToDealing()
         {
             _gamePhase.Phase.Value = GamePhase.Won;
 
             _newGameSubscriber.Trigger(new NewGameRequestedMessage());
 
-            Assert.That(_gamePhase.Phase.Value, Is.EqualTo(GamePhase.Playing));
+            Assert.That(_gamePhase.Phase.Value, Is.EqualTo(GamePhase.Dealing));
         }
 
         [Test]
