@@ -26,6 +26,9 @@ namespace KlondikeSolitaire.Editor
             "ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"
         };
 
+        private static readonly Color RedSuitColor = new(0.7f, 0.1f, 0.1f, 1f);
+        private static readonly Color BlackSuitColor = new(0.1f, 0.1f, 0.1f, 1f);
+
         [MenuItem("Tools/Klondike/Generate Card Atlas")]
         public static void Generate()
         {
@@ -85,7 +88,8 @@ namespace KlondikeSolitaire.Editor
                         rankTextures[rankIndex],
                         suitTextures[suitIndex],
                         figureTextures,
-                        rankIndex
+                        rankIndex,
+                        isRed
                     );
 
                     string outputPath = $"{OutputFolder}/card_{SuitNames[suitIndex]}_{RankOutputNames[rankIndex]}.png";
@@ -114,7 +118,8 @@ namespace KlondikeSolitaire.Editor
             Texture2D rankTexture,
             Texture2D suitTexture,
             Texture2D[] figureTextures,
-            int rankIndex)
+            int rankIndex,
+            bool isRed)
         {
             Texture2D result = new Texture2D(CardWidth, CardHeight, TextureFormat.RGBA32, false);
 
@@ -122,6 +127,7 @@ namespace KlondikeSolitaire.Editor
             result.SetPixels(frontPixels);
 
             bool isFigure = rankIndex >= 10;
+            Color tintColor = isRed ? RedSuitColor : BlackSuitColor;
 
             if (isFigure && figureTextures[rankIndex - 10] != null)
             {
@@ -130,8 +136,8 @@ namespace KlondikeSolitaire.Editor
 
             if (rankTexture != null)
             {
-                BlitCorner(result, rankTexture, false);
-                BlitCorner(result, rankTexture, true);
+                BlitCorner(result, rankTexture, false, tintColor);
+                BlitCorner(result, rankTexture, true, tintColor);
             }
 
             if (suitTexture != null)
@@ -195,7 +201,7 @@ namespace KlondikeSolitaire.Editor
             }
         }
 
-        private static void BlitCorner(Texture2D target, Texture2D source, bool flipped)
+        private static void BlitCorner(Texture2D target, Texture2D source, bool flipped, Color tintColor)
         {
             int targetWidth = target.width;
             int targetHeight = target.height;
@@ -223,8 +229,9 @@ namespace KlondikeSolitaire.Editor
 
                     if (sourceColor.a > 0.01f)
                     {
+                        Color tinted = new Color(tintColor.r, tintColor.g, tintColor.b, sourceColor.a);
                         Color existing = target.GetPixel(startX + x, startY + y);
-                        target.SetPixel(startX + x, startY + y, AlphaBlend(existing, sourceColor));
+                        target.SetPixel(startX + x, startY + y, AlphaBlend(existing, tinted));
                     }
                 }
             }
