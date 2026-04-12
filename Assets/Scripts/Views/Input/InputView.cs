@@ -63,7 +63,7 @@ namespace KlondikeSolitaire.Views
         private void Awake()
         {
             _mainCamera = Camera.main;
-            _dragCardBuffer = new CardView[13];
+            _dragCardBuffer = new CardView[DragView.MAX_DRAG_COUNT];
             _controls = new SolitaireControls();
         }
 
@@ -198,7 +198,7 @@ namespace KlondikeSolitaire.Views
             }
             else if (_pressedCard != null)
             {
-                float pressDuration = (Time.unscaledTime - _pressStartTime) * 1000f;
+                float pressDuration = Time.unscaledTime - _pressStartTime;
                 if (pressDuration <= _config.TapMaxDuration)
                 {
                     HandleTap(_pressedCard, _pressedPile);
@@ -258,19 +258,24 @@ namespace KlondikeSolitaire.Views
                 bool isValid = _validation.IsValidMove(_board, sourcePile.PileId, targetPile.PileId, cardCount);
                 if (isValid)
                 {
+                    _dragView.FinishDrag();
                     _execution.ExecuteMove(sourcePile.PileId, targetPile.PileId, cardCount);
-                    await _dragView.CompleteDrag(targetPile);
                     return;
                 }
             }
 
             await _dragView.CancelDrag();
+
+            if (sourcePile != null)
+            {
+                sourcePile.UpdateCardPositions();
+            }
         }
 
         private void HandleTap(CardView card, PileView pileView)
         {
             PileId sourcePileId = pileView.PileId;
-            float now = Time.unscaledTime * 1000f;
+            float now = Time.unscaledTime;
 
             if (_lastTappedCard == card && (now - _lastTapTime) <= _config.DoubleTapWindow)
             {
@@ -334,8 +339,7 @@ namespace KlondikeSolitaire.Views
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
                 Collider2D col = _raycastBuffer[hitIndex];
-                CardView cardView = col.GetComponent<CardView>();
-                if (cardView == null)
+                if (!_boardView.TryGetCardViewByCollider(col, out CardView cardView))
                 {
                     continue;
                 }
@@ -361,8 +365,7 @@ namespace KlondikeSolitaire.Views
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
                 Collider2D col = _raycastBuffer[hitIndex];
-                PileView pileView = col.GetComponent<PileView>();
-                if (pileView != null)
+                if (_boardView.TryGetPileViewByCollider(col, out PileView pileView))
                 {
                     float dist = Vector2.Distance(worldPos2D, pileView.transform.position);
                     if (dist < closestDistance)
@@ -381,8 +384,7 @@ namespace KlondikeSolitaire.Views
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
                 Collider2D col = _raycastBuffer[hitIndex];
-                CardView cardView = col.GetComponent<CardView>();
-                if (cardView != null && !_dragView.IsCardBeingDragged(cardView))
+                if (_boardView.TryGetCardViewByCollider(col, out CardView cardView) && !_dragView.IsCardBeingDragged(cardView))
                 {
                     return FindPileForCard(cardView);
                 }
@@ -396,8 +398,7 @@ namespace KlondikeSolitaire.Views
             int hitCount = Physics2D.OverlapPointNonAlloc(worldPos2D, _raycastBuffer);
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
-                PileView pileView = _raycastBuffer[hitIndex].GetComponent<PileView>();
-                if (pileView != null && pileView.PileId.Type == PileType.Stock)
+                if (_boardView.TryGetPileViewByCollider(_raycastBuffer[hitIndex], out PileView pileView) && pileView.PileId.Type == PileType.Stock)
                 {
                     return pileView;
                 }
@@ -407,20 +408,7 @@ namespace KlondikeSolitaire.Views
 
         private PileView FindPileForCard(CardView card)
         {
-            PileModel[] allPiles = _board.AllPiles;
-            for (int pileIndex = 0; pileIndex < allPiles.Length; pileIndex++)
-            {
-                PileModel pile = allPiles[pileIndex];
-                IReadOnlyList<CardModel> cards = pile.Cards;
-                for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
-                {
-                    if (cards[cardIndex] == card.Model)
-                    {
-                        return _boardView.GetPileView(pile.Id);
-                    }
-                }
-            }
-            return null;
+            return _boardView.FindPileViewForCard(card.Model);
         }
 
         private int DetermineDraggableCount(CardView card, PileModel pile, PileId pileId)

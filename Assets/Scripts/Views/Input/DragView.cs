@@ -8,7 +8,7 @@ namespace KlondikeSolitaire.Views
 {
     public sealed class DragView : MonoBehaviour
     {
-        private const int MAX_DRAG_COUNT = 13;
+        public const int MAX_DRAG_COUNT = 13;
         private const float DRAG_BASE_Z = -1f;
 
         private CardView[] _draggedCards;
@@ -44,6 +44,7 @@ namespace KlondikeSolitaire.Views
             for (int cardIndex = 0; cardIndex < count; cardIndex++)
             {
                 _originPositions[cardIndex] = cards[cardIndex].transform.position;
+                cards[cardIndex].SetStripMode(false);
                 cards[cardIndex].SetRendererEnabled(true);
                 cards[cardIndex].SetSortingOrder(cardIndex, DRAG_BASE_Z);
                 _dragOffsets[cardIndex] = cards[cardIndex].transform.position - pointerWorldPos;
@@ -54,7 +55,7 @@ namespace KlondikeSolitaire.Views
 
         public void UpdateDragPosition(Vector3 worldPos)
         {
-            if (!_isDragging || _draggedCards == null)
+            if (!_isDragging)
             {
                 return;
             }
@@ -111,7 +112,7 @@ namespace KlondikeSolitaire.Views
                 _moveTasks[cardIndex] = _animator.MoveCard(_draggedCards[cardIndex].transform, _originPositions[cardIndex]);
             }
 
-            Transform firstCardTransform = _dragCount > 0 ? _draggedCards[0].transform : null;
+            Transform firstCardTransform = _draggedCards[0].transform;
 
             for (int taskIndex = _dragCount; taskIndex < MAX_DRAG_COUNT; taskIndex++)
             {
@@ -119,10 +120,7 @@ namespace KlondikeSolitaire.Views
             }
             await UniTask.WhenAll(_moveTasks).AttachExternalCancellation(_destroyToken);
 
-            if (firstCardTransform != null)
-            {
-                await _animator.ShakeCard(firstCardTransform);
-            }
+            await _animator.ShakeCard(firstCardTransform, _destroyToken);
 
             if (_dragGeneration == generation)
             {
@@ -132,7 +130,7 @@ namespace KlondikeSolitaire.Views
 
         public bool IsCardBeingDragged(CardView card)
         {
-            if (!_isDragging || _draggedCards == null)
+            if (!_isDragging)
             {
                 return false;
             }
@@ -146,6 +144,11 @@ namespace KlondikeSolitaire.Views
             }
 
             return false;
+        }
+
+        public void FinishDrag()
+        {
+            ClearDragState();
         }
 
         private void ClearDragState()

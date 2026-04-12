@@ -8,11 +8,13 @@ namespace KlondikeSolitaire.Views
     {
         [SerializeField] private PileType _pileType;
         [SerializeField] private int _pileIndex;
+        [SerializeField] private Collider2D _collider;
 
         private LayoutConfig _layout;
         private readonly List<CardView> _cards = new();
 
         public PileId PileId => new(_pileType, _pileIndex);
+        public Collider2D Collider => _collider;
 
         public void Construct(LayoutConfig layout)
         {
@@ -77,6 +79,14 @@ namespace KlondikeSolitaire.Views
             UpdateCardPositions();
         }
 
+        private void OnValidate()
+        {
+            if (_collider == null)
+            {
+                _collider = GetComponent<Collider2D>();
+            }
+        }
+
         private void UpdateStackedPositions()
         {
             Vector3 pilePosition = transform.position;
@@ -118,8 +128,11 @@ namespace KlondikeSolitaire.Views
                 }
                 else
                 {
-                    cardView.SetStripMode(false);
-                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset, pilePosition.z);
+                    bool hasCardOnTop = cardIndex < _cards.Count - 1;
+                    cardView.SetStripMode(hasCardOnTop);
+
+                    float alignOffset = hasCardOnTop ? cardView.StripAlignOffset : 0f;
+                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset + alignOffset, pilePosition.z);
                     yOffset += _layout.FaceUpYOffset;
                 }
 
@@ -166,9 +179,10 @@ namespace KlondikeSolitaire.Views
 
             CardView targetCard = _cards[index];
             bool targetIsFaceUp = targetCard.Model.IsFaceUp.Value;
-            bool isStrip = !targetIsFaceUp
-                && index < _cards.Count - 1
-                && index != lastFaceDownIndex;
+            bool hasCardOnTop = index < _cards.Count - 1;
+            bool isStrip = targetIsFaceUp
+                ? hasCardOnTop
+                : hasCardOnTop && index != lastFaceDownIndex;
             float alignOffset = isStrip ? targetCard.StripAlignOffset : 0f;
 
             return transform.position + new Vector3(0f, -yOffset + alignOffset, index * CardView.Z_STEP);

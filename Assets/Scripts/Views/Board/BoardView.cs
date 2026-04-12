@@ -12,7 +12,7 @@ namespace KlondikeSolitaire.Views
 {
     public sealed class BoardView : MonoBehaviour
     {
-        [SerializeField] private GameObject _cardPrefab;
+        [SerializeField] private CardView _cardPrefab;
         [SerializeField] private PileView[] _pileViews;
         [SerializeField] private Transform _cardPoolParent;
 
@@ -25,10 +25,14 @@ namespace KlondikeSolitaire.Views
         private MoveExecutionSystem _execution;
 
         private CardView[] _cardViews;
-        private readonly Dictionary<CardModel, CardView> _cardViewMap = new(52);
+        private readonly Dictionary<CardModel, CardView> _cardViewMap = new(BoardModel.DECK_SIZE);
+        private readonly Dictionary<CardModel, PileId> _cardPileMap = new(BoardModel.DECK_SIZE);
+        private readonly Dictionary<Collider2D, CardView> _colliderToCard = new(BoardModel.DECK_SIZE);
+        private readonly Dictionary<Collider2D, PileView> _colliderToPile = new();
         private CardView _pendingFlipCard;
         private CancellationTokenSource _dealCts;
         private CancellationTokenSource _autoCompleteCts;
+        private CancellationTokenSource _moveAnimCts;
         private GamePhase _currentPhase;
         private readonly CompositeDisposable _disposables = new();
 
@@ -67,12 +71,19 @@ namespace KlondikeSolitaire.Views
 
         private void Start()
         {
-            _cardViews = new CardView[52];
-            for (int cardIndex = 0; cardIndex < 52; cardIndex++)
+            _cardViews = new CardView[BoardModel.DECK_SIZE];
+            for (int cardIndex = 0; cardIndex < BoardModel.DECK_SIZE; cardIndex++)
             {
-                GameObject instance = Instantiate(_cardPrefab, _cardPoolParent);
-                _cardViews[cardIndex] = instance.GetComponent<CardView>();
-                instance.SetActive(false);
+                CardView cardView = Instantiate(_cardPrefab, _cardPoolParent);
+                _cardViews[cardIndex] = cardView;
+                _colliderToCard[cardView.Collider] = cardView;
+                cardView.gameObject.SetActive(false);
+            }
+
+            for (int pileIndex = 0; pileIndex < _pileViews.Length; pileIndex++)
+            {
+                PileView pileView = _pileViews[pileIndex];
+                _colliderToPile[pileView.Collider] = pileView;
             }
         }
 
@@ -86,6 +97,7 @@ namespace KlondikeSolitaire.Views
         private void AssignCardViewsToModel()
         {
             _cardViewMap.Clear();
+            _cardPileMap.Clear();
 
             int viewIndex = 0;
             PileModel[] allPiles = _model.AllPiles;
@@ -104,11 +116,13 @@ namespace KlondikeSolitaire.Views
                     cardView.Initialize(
                         cardModel,
                         _mapping.GetFaceSprite(cardModel.Suit, cardModel.Rank),
+                        _mapping.GetFaceStripSprite(cardModel.Suit, cardModel.Rank),
                         _mapping.BackSprite,
                         _mapping.BackStripSprite,
                         _animator);
 
                     _cardViewMap[cardModel] = cardView;
+                    _cardPileMap[cardModel] = pile.Id;
                 }
             }
 
@@ -140,18 +154,22 @@ namespace KlondikeSolitaire.Views
                 {
                     cardView.SetStripMode(false);
                     cardView.ResetSpriteToBack();
+                    cardView.SetRendererEnabled(false);
                     cardView.transform.position = stockPosition;
                 }
             }
+
+            GetPileView(PileId.Stock()).UpdateCardPositions();
 
             var dealTasks = new List<UniTask>();
             float cumulativeDelay = 0f;
 
             PileModel[] tableau = _model.Tableau;
+            CardView[] previousCardInColumn = new CardView[BoardModel.TABLEAU_COUNT];
 
-            for (int rowIndex = 0; rowIndex < 7; rowIndex++)
+            for (int rowIndex = 0; rowIndex < BoardModel.TABLEAU_COUNT; rowIndex++)
             {
-                for (int columnIndex = rowIndex; columnIndex < 7; columnIndex++)
+                for (int columnIndex = rowIndex; columnIndex < BoardModel.TABLEAU_COUNT; columnIndex++)
                 {
                     PileModel pile = tableau[columnIndex];
                     PileView pileView = GetPileView(pile.Id);
@@ -169,15 +187,20 @@ namespace KlondikeSolitaire.Views
                     bool isTopCard = rowIndex == cards.Count - 1;
                     float delay = cumulativeDelay;
 
+                    CardView cardToStrip = previousCardInColumn[columnIndex];
+                    bool shouldStripPrevious = cardToStrip != null && (rowIndex - 1) < cards.Count - 2;
+
                     if (isTopCard)
                     {
                         dealTasks.Add(DealCardWithFlipAsync(cardView, targetPosition, delay, cancellationToken));
                     }
                     else
                     {
-                        dealTasks.Add(_animator.DealCard(cardView.transform, targetPosition, delay, cancellationToken));
+                        dealTasks.Add(DealCardAndStripPreviousAsync(
+                            cardView, cardToStrip, shouldStripPrevious, targetPosition, delay, cancellationToken));
                     }
 
+                    previousCardInColumn[columnIndex] = cardView;
                     cumulativeDelay += _animConfig.DealDelay;
                 }
             }
@@ -191,11 +214,32 @@ namespace KlondikeSolitaire.Views
             }
         }
 
+        private async UniTask DealCardAndStripPreviousAsync(
+            CardView cardView,
+            CardView previousCard,
+            bool shouldStrip,
+            Vector3 targetPosition,
+            float delay,
+            CancellationToken cancellationToken)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: cancellationToken);
+            cardView.SetRendererEnabled(true);
+            await _animator.MoveCard(cardView.transform, targetPosition, cancellationToken);
+
+            if (shouldStrip)
+            {
+                previousCard.SetStripMode(true);
+                Vector3 pos = previousCard.transform.position;
+                previousCard.transform.position = new Vector3(pos.x, pos.y + previousCard.StripAlignOffset, pos.z);
+            }
+        }
+
         private async UniTask DealCardWithFlipAsync(CardView cardView, Vector3 target, float delay, CancellationToken cancellationToken)
         {
-            await _animator.DealCard(cardView.transform, target, delay, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            await cardView.PlayFlipAnimation(true);
+            await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: cancellationToken);
+            cardView.SetRendererEnabled(true);
+            await _animator.MoveCard(cardView.transform, target, cancellationToken);
+            await cardView.PlayFlipAnimation(true, cancellationToken);
         }
 
         private void OnCardMoved(CardMovedMessage message)
@@ -206,17 +250,27 @@ namespace KlondikeSolitaire.Views
             List<CardView> movedCards = sourcePileView.RemoveTopCards(message.CardCount);
             destPileView.AddCards(movedCards);
 
+            PileModel destPile = _model.GetPile(message.DestPileId);
+            IReadOnlyList<CardModel> destCards = destPile.Cards;
+            for (int cardIndex = destCards.Count - message.CardCount; cardIndex < destCards.Count; cardIndex++)
+            {
+                _cardPileMap[destCards[cardIndex]] = message.DestPileId;
+            }
+
+            _moveAnimCts ??= new CancellationTokenSource();
+            CancellationToken token = _moveAnimCts.Token;
+
             if (message.SourcePileId.Type == PileType.Stock && message.DestPileId.Type == PileType.Waste)
             {
-                AnimateStockDrawAsync(movedCards[0], destPileView).Forget();
+                AnimateStockDrawAsync(movedCards[0], destPileView, token).Forget();
             }
             else
             {
-                AnimateCardMoveAsync(movedCards, destPileView).Forget();
+                AnimateCardMoveAsync(movedCards, destPileView, token).Forget();
             }
         }
 
-        private async UniTaskVoid AnimateStockDrawAsync(CardView cardView, PileView wastePileView)
+        private async UniTaskVoid AnimateStockDrawAsync(CardView cardView, PileView wastePileView, CancellationToken cancellationToken)
         {
             cardView.ResetSpriteToBack();
             cardView.SetRendererEnabled(true);
@@ -229,17 +283,22 @@ namespace KlondikeSolitaire.Views
             Vector3 wastePos = wastePileView.transform.position;
             Vector3 moveTarget = new Vector3(wastePos.x, wastePos.y, DRAW_Z);
 
-            await _animator.MoveCard(cardView.transform, moveTarget);
-            await cardView.PlayFlipAnimation(true);
+            await _animator.MoveCard(cardView.transform, moveTarget, cancellationToken);
+            await cardView.PlayFlipAnimation(true, cancellationToken);
 
             cardView.SetColliderEnabled(true);
             wastePileView.UpdateCardPositions();
         }
 
-        private async UniTaskVoid AnimateCardMoveAsync(List<CardView> movedCards, PileView destPileView)
+        private async UniTaskVoid AnimateCardMoveAsync(List<CardView> movedCards, PileView destPileView, CancellationToken cancellationToken)
         {
             CardView flipCard = _pendingFlipCard;
             _pendingFlipCard = null;
+
+            if (flipCard != null)
+            {
+                flipCard.ResetSpriteToBack();
+            }
 
             IReadOnlyList<CardView> allDestCards = destPileView.GetCardViews();
             int destCardCount = allDestCards.Count;
@@ -256,7 +315,7 @@ namespace KlondikeSolitaire.Views
             {
                 CardView cardView = movedCards[cardIndex];
                 Vector3 targetPosition = destPileView.GetCardWorldPosition(startIndex + cardIndex);
-                moveTasks.Add(_animator.MoveCard(cardView.transform, targetPosition));
+                moveTasks.Add(_animator.MoveCard(cardView.transform, targetPosition, cancellationToken));
             }
 
             await UniTask.WhenAll(moveTasks);
@@ -270,13 +329,12 @@ namespace KlondikeSolitaire.Views
 
             if (flipCard != null)
             {
-                await flipCard.PlayFlipAnimation(true);
+                await flipCard.PlayFlipAnimation(true, cancellationToken);
             }
         }
 
         private void OnCardFlipped(CardFlippedMessage message)
         {
-            PileView pileView = GetPileView(message.PileId);
             PileModel pileModel = _model.GetPile(message.PileId);
 
             if (message.CardIndex >= 0 && message.CardIndex < pileModel.Count)
@@ -287,11 +345,8 @@ namespace KlondikeSolitaire.Views
                 if (cardView != null && cardModel.IsFaceUp.Value)
                 {
                     _pendingFlipCard = cardView;
-                    cardView.ResetSpriteToBack();
                 }
             }
-
-            pileView.UpdateCardPositions();
         }
 
         private void OnGamePhaseChanged(GamePhaseChangedMessage message)
@@ -300,13 +355,9 @@ namespace KlondikeSolitaire.Views
 
             if (message.NewPhase == GamePhase.Dealing)
             {
-                _dealCts?.Cancel();
-                _dealCts?.Dispose();
-                _dealCts = null;
-
-                _autoCompleteCts?.Cancel();
-                _autoCompleteCts?.Dispose();
-                _autoCompleteCts = null;
+                CancelAndDispose(ref _dealCts);
+                CancelAndDispose(ref _autoCompleteCts);
+                CancelAndDispose(ref _moveAnimCts);
 
                 _animator.KillAllOnTargets(_cardViews);
 
@@ -319,6 +370,7 @@ namespace KlondikeSolitaire.Views
                 }
 
                 _cardViewMap.Clear();
+                _cardPileMap.Clear();
 
                 for (int pileIndex = 0; pileIndex < _pileViews.Length; pileIndex++)
                 {
@@ -333,8 +385,7 @@ namespace KlondikeSolitaire.Views
 
         private async UniTaskVoid RunAutoCompleteAsync()
         {
-            _autoCompleteCts?.Cancel();
-            _autoCompleteCts?.Dispose();
+            CancelAndDispose(ref _autoCompleteCts);
             _autoCompleteCts = new CancellationTokenSource();
             CancellationToken token = _autoCompleteCts.Token;
 
@@ -362,7 +413,7 @@ namespace KlondikeSolitaire.Views
                 PileType.Waste => 1,
                 PileType.Foundation => 2 + pileId.Index,
                 PileType.Tableau => 2 + BoardModel.FOUNDATION_COUNT + pileId.Index,
-                _ => 0
+                _ => throw new System.ArgumentOutOfRangeException(nameof(pileId), pileId.Type, "Unknown PileType")
             };
 
             return _pileViews[index];
@@ -374,13 +425,34 @@ namespace KlondikeSolitaire.Views
             return cardView;
         }
 
+        public PileView FindPileViewForCard(CardModel card)
+        {
+            return _cardPileMap.TryGetValue(card, out PileId pileId) ? GetPileView(pileId) : null;
+        }
+
+        public bool TryGetCardViewByCollider(Collider2D collider, out CardView cardView)
+        {
+            return _colliderToCard.TryGetValue(collider, out cardView);
+        }
+
+        public bool TryGetPileViewByCollider(Collider2D collider, out PileView pileView)
+        {
+            return _colliderToPile.TryGetValue(collider, out pileView);
+        }
+
         private void OnDestroy()
         {
-            _dealCts?.Cancel();
-            _dealCts?.Dispose();
-            _autoCompleteCts?.Cancel();
-            _autoCompleteCts?.Dispose();
+            CancelAndDispose(ref _dealCts);
+            CancelAndDispose(ref _autoCompleteCts);
+            CancelAndDispose(ref _moveAnimCts);
             _disposables.Dispose();
+        }
+
+        private static void CancelAndDispose(ref CancellationTokenSource cts)
+        {
+            cts?.Cancel();
+            cts?.Dispose();
+            cts = null;
         }
     }
 }

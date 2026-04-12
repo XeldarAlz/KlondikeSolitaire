@@ -1,46 +1,48 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using KlondikeSolitaire.Core;
 using UnityEngine;
 
 namespace KlondikeSolitaire.Views
 {
+    [RequireComponent(typeof(SpriteRenderer), typeof(BoxCollider2D))]
     public sealed class CardView : MonoBehaviour
     {
-        private SpriteRenderer _spriteRenderer;
-        private BoxCollider2D _collider;
+        [SerializeField] private SpriteRenderer _spriteRenderer;
+        [SerializeField] private BoxCollider2D _collider;
 
         private CardModel _model;
         private Sprite _faceSprite;
+        private Sprite _faceStripSprite;
         private Sprite _backSprite;
         private Sprite _backStripSprite;
         private CardAnimator _animator;
         private bool _isStripMode;
-        private float _stripAlignOffset;
+        private float _backStripAlignOffset;
+        private float _faceStripAlignOffset;
         private IDisposable _faceUpSubscription;
 
         public const float Z_STEP = -0.01f;
 
         public CardModel Model => _model;
         public SpriteRenderer SpriteRenderer => _spriteRenderer;
-        public float StripAlignOffset => _stripAlignOffset;
+        public BoxCollider2D Collider => _collider;
 
-        private void Awake()
-        {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            _collider = GetComponent<BoxCollider2D>();
-        }
+        public float StripAlignOffset => _model.IsFaceUp.Value ? _faceStripAlignOffset : _backStripAlignOffset;
 
-        public void Initialize(CardModel model, Sprite faceSprite, Sprite backSprite, Sprite backStripSprite, CardAnimator animator)
+        public void Initialize(CardModel model, Sprite faceSprite, Sprite faceStripSprite, Sprite backSprite, Sprite backStripSprite, CardAnimator animator)
         {
             _faceUpSubscription?.Dispose();
 
             _model = model;
             _faceSprite = faceSprite;
+            _faceStripSprite = faceStripSprite;
             _backSprite = backSprite;
             _backStripSprite = backStripSprite;
             _animator = animator;
-            _stripAlignOffset = (_backSprite.bounds.size.y - _backStripSprite.bounds.size.y) * 0.5f;
+            _backStripAlignOffset = (_backSprite.bounds.size.y - _backStripSprite.bounds.size.y) * 0.5f;
+            _faceStripAlignOffset = (_faceSprite.bounds.size.y - _faceStripSprite.bounds.size.y) * 0.5f;
 
             _faceUpSubscription = model.IsFaceUp.Subscribe(OnFaceUpChanged);
 
@@ -68,18 +70,15 @@ namespace KlondikeSolitaire.Views
             _spriteRenderer.sprite = _backSprite;
         }
 
-        public UniTask PlayFlipAnimation(bool toFaceUp)
+        public UniTask PlayFlipAnimation(bool toFaceUp, CancellationToken cancellationToken = default)
         {
-            return _animator.FlipCard(_spriteRenderer, _faceSprite, _backSprite, toFaceUp);
+            return _animator.FlipCard(_spriteRenderer, _faceSprite, _backSprite, toFaceUp, cancellationToken);
         }
 
         public void SetStripMode(bool strip)
         {
             _isStripMode = strip;
-            if (!_model.IsFaceUp.Value)
-            {
-                _spriteRenderer.sprite = _isStripMode ? _backStripSprite : _backSprite;
-            }
+            UpdateSprite(_model.IsFaceUp.Value);
         }
 
         private void OnFaceUpChanged(bool isFaceUp)
@@ -91,11 +90,23 @@ namespace KlondikeSolitaire.Views
         {
             if (isFaceUp)
             {
-                _spriteRenderer.sprite = _faceSprite;
+                _spriteRenderer.sprite = _isStripMode ? _faceStripSprite : _faceSprite;
             }
             else
             {
                 _spriteRenderer.sprite = _isStripMode ? _backStripSprite : _backSprite;
+            }
+        }
+
+        private void OnValidate()
+        {
+            if (_spriteRenderer == null)
+            {
+                _spriteRenderer = GetComponent<SpriteRenderer>();
+            }
+            if (_collider == null)
+            {
+                _collider = GetComponent<BoxCollider2D>();
             }
         }
 
