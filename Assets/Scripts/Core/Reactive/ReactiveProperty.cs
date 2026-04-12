@@ -7,6 +7,7 @@ namespace KlondikeSolitaire.Core
     {
         private T _value;
         private readonly List<Action<T>> _subscribers;
+        private int _notificationDepth;
 
         public T Value
         {
@@ -42,15 +43,38 @@ namespace KlondikeSolitaire.Core
 
         private void NotifySubscribers()
         {
-            for (int subscriberIndex = 0; subscriberIndex < _subscribers.Count; subscriberIndex++)
+            _notificationDepth++;
+            try
             {
-                _subscribers[subscriberIndex].Invoke(_value);
+                for (int subscriberIndex = 0; subscriberIndex < _subscribers.Count; subscriberIndex++)
+                {
+                    _subscribers[subscriberIndex]?.Invoke(_value);
+                }
+            }
+            finally
+            {
+                _notificationDepth--;
+                if (_notificationDepth == 0)
+                {
+                    _subscribers.RemoveAll(static subscriber => subscriber == null);
+                }
             }
         }
 
         private void Unsubscribe(Action<T> callback)
         {
-            _subscribers.Remove(callback);
+            if (_notificationDepth > 0)
+            {
+                int index = _subscribers.IndexOf(callback);
+                if (index >= 0)
+                {
+                    _subscribers[index] = null;
+                }
+            }
+            else
+            {
+                _subscribers.Remove(callback);
+            }
         }
 
         public void Dispose()
