@@ -49,7 +49,7 @@ namespace KlondikeSolitaire.Systems
 
         private List<CardModel> CreateDeck()
         {
-            List<CardModel> deck = new List<CardModel>(capacity: 52);
+            List<CardModel> deck = new List<CardModel>(capacity: BoardModel.DECK_SIZE);
 
             for (int suitIndex = 0; suitIndex < Suits.Length; suitIndex++)
             {
@@ -86,7 +86,7 @@ namespace KlondikeSolitaire.Systems
         {
             int cardIndex = 0;
 
-            for (int columnIndex = 0; columnIndex < 7; columnIndex++)
+            for (int columnIndex = 0; columnIndex < BoardModel.TABLEAU_COUNT; columnIndex++)
             {
                 for (int rowIndex = 0; rowIndex <= columnIndex; rowIndex++)
                 {
@@ -100,7 +100,7 @@ namespace KlondikeSolitaire.Systems
 
         private void DealToStock()
         {
-            for (int cardIndex = 28; cardIndex < _deck.Count; cardIndex++)
+            for (int cardIndex = BoardModel.TABLEAU_DEAL_COUNT; cardIndex < _deck.Count; cardIndex++)
             {
                 _board.Stock.AddCard(_deck[cardIndex]);
             }

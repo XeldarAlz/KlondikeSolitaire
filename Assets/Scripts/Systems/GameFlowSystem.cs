@@ -107,7 +107,7 @@ namespace KlondikeSolitaire.Systems
         {
             for (int foundationIndex = 0; foundationIndex < _board.Foundations.Length; foundationIndex++)
             {
-                if (_board.Foundations[foundationIndex].Count != 13)
+                if (_board.Foundations[foundationIndex].Count != BoardModel.RANK_COUNT)
                 {
                     return false;
                 }

@@ -86,7 +86,7 @@ namespace KlondikeSolitaire.Systems
                     }
 
                     CardModel topCard = _board.Tableau[tableauIndex].Cards[topIndex];
-                    int foundationIndex = (int)topCard.Suit;
+                    int foundationIndex = BoardModel.FoundationIdForSuit(topCard.Suit).Index;
                     int expectedRank = foundationCounts[foundationIndex] + 1;
 
                     if (topCard.Value == expectedRank && topCard.Value < lowestRank)

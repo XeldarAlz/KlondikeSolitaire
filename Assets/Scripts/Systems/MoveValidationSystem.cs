@@ -14,11 +14,6 @@ namespace KlondikeSolitaire.Systems
             PileModel sourcePile = board.GetPile(source);
             PileModel destPile = board.GetPile(dest);
 
-            if (sourcePile == null || destPile == null)
-            {
-                return false;
-            }
-
             if (sourcePile.Count < cardCount)
             {
                 return false;
@@ -38,7 +33,7 @@ namespace KlondikeSolitaire.Systems
         public PileId? FindBestTarget(BoardModel board, PileId source, int cardCount)
         {
             PileModel sourcePile = board.GetPile(source);
-            if (sourcePile == null || sourcePile.Count < cardCount)
+            if (sourcePile.Count < cardCount)
             {
                 return null;
             }
@@ -80,14 +75,7 @@ namespace KlondikeSolitaire.Systems
             }
 
             CardModel bottomCard = source.Cards[source.Count - cardCount];
-
-            if (dest.Count == 0)
-            {
-                return bottomCard.Rank == Rank.King;
-            }
-
-            CardModel destTop = dest.TopCard;
-            return IsAlternatingColor(bottomCard, destTop) && bottomCard.Value == destTop.Value - 1;
+            return CanPlaceOnTableau(bottomCard, dest);
         }
 
         private static bool IsValidTableauToFoundation(PileModel source, PileModel dest, int cardCount)
@@ -97,15 +85,7 @@ namespace KlondikeSolitaire.Systems
                 return false;
             }
 
-            CardModel card = source.TopCard;
-
-            if (dest.Count == 0)
-            {
-                return card.Rank == Rank.Ace;
-            }
-
-            CardModel destTop = dest.TopCard;
-            return card.Suit == destTop.Suit && card.Value == destTop.Value + 1;
+            return CanPlaceOnFoundation(source.TopCard, dest);
         }
 
         private static bool IsValidWasteToTableau(PileModel source, PileModel dest)
@@ -115,15 +95,7 @@ namespace KlondikeSolitaire.Systems
                 return false;
             }
 
-            CardModel card = source.TopCard;
-
-            if (dest.Count == 0)
-            {
-                return card.Rank == Rank.King;
-            }
-
-            CardModel destTop = dest.TopCard;
-            return IsAlternatingColor(card, destTop) && card.Value == destTop.Value - 1;
+            return CanPlaceOnTableau(source.TopCard, dest);
         }
 
         private static bool IsValidWasteToFoundation(PileModel source, PileModel dest)
@@ -133,15 +105,7 @@ namespace KlondikeSolitaire.Systems
                 return false;
             }
 
-            CardModel card = source.TopCard;
-
-            if (dest.Count == 0)
-            {
-                return card.Rank == Rank.Ace;
-            }
-
-            CardModel destTop = dest.TopCard;
-            return card.Suit == destTop.Suit && card.Value == destTop.Value + 1;
+            return CanPlaceOnFoundation(source.TopCard, dest);
         }
 
         private static bool IsValidFoundationToTableau(PileModel source, PileModel dest)
@@ -151,15 +115,29 @@ namespace KlondikeSolitaire.Systems
                 return false;
             }
 
-            CardModel card = source.TopCard;
+            return CanPlaceOnTableau(source.TopCard, dest);
+        }
 
+        private static bool CanPlaceOnTableau(CardModel card, PileModel dest)
+        {
             if (dest.Count == 0)
             {
                 return card.Rank == Rank.King;
             }
 
             CardModel destTop = dest.TopCard;
-            return IsAlternatingColor(card, destTop) && card.Value == destTop.Value - 1;
+            return destTop.IsFaceUp.Value && IsAlternatingColor(card, destTop) && card.Value == destTop.Value - 1;
+        }
+
+        private static bool CanPlaceOnFoundation(CardModel card, PileModel dest)
+        {
+            if (dest.Count == 0)
+            {
+                return card.Rank == Rank.Ace;
+            }
+
+            CardModel destTop = dest.TopCard;
+            return card.Suit == destTop.Suit && card.Value == destTop.Value + 1;
         }
 
         private static bool IsValidSequence(PileModel pile, int cardCount)

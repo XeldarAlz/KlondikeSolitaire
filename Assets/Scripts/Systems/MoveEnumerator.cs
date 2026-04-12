@@ -37,7 +37,7 @@ namespace KlondikeSolitaire.Systems
 
             if (wastePile.Count > 0)
             {
-                PileId canonicalFoundation = PileId.Foundation((int)wastePile.TopCard.Suit);
+                PileId canonicalFoundation = BoardModel.FoundationIdForSuit(wastePile.TopCard.Suit);
                 if (_validation.IsValidMove(board, wasteId, canonicalFoundation, 1))
                 {
                     if (earlyExit)
@@ -70,7 +70,7 @@ namespace KlondikeSolitaire.Systems
                 }
 
                 PileId sourceId = PileId.Tableau(sourceIndex);
-                PileId canonicalFoundation = PileId.Foundation((int)sourcePile.TopCard.Suit);
+                PileId canonicalFoundation = BoardModel.FoundationIdForSuit(sourcePile.TopCard.Suit);
                 if (_validation.IsValidMove(board, sourceId, canonicalFoundation, 1))
                 {
                     if (earlyExit)
