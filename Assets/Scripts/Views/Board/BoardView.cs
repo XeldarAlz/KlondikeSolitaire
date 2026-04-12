@@ -23,6 +23,7 @@ namespace KlondikeSolitaire.Views
         private LayoutConfig _layout;
         private AutoCompleteSystem _autoComplete;
         private MoveExecutionSystem _execution;
+        private IPublisher<DealAnimationCompletedMessage> _dealAnimCompletedPublisher;
 
         private CardView[] _cardViews;
         private readonly Dictionary<CardModel, CardView> _cardViewMap = new(BoardModel.DECK_SIZE);
@@ -45,6 +46,7 @@ namespace KlondikeSolitaire.Views
             LayoutConfig layout,
             AutoCompleteSystem autoComplete,
             MoveExecutionSystem execution,
+            IPublisher<DealAnimationCompletedMessage> dealAnimCompletedPublisher,
             ISubscriber<DealCompletedMessage> dealSubscriber,
             ISubscriber<CardMovedMessage> cardMovedSubscriber,
             ISubscriber<CardFlippedMessage> cardFlippedSubscriber,
@@ -57,6 +59,7 @@ namespace KlondikeSolitaire.Views
             _layout = layout;
             _autoComplete = autoComplete;
             _execution = execution;
+            _dealAnimCompletedPublisher = dealAnimCompletedPublisher;
 
             for (int pileIndex = 0; pileIndex < _pileViews.Length; pileIndex++)
             {
@@ -212,6 +215,8 @@ namespace KlondikeSolitaire.Views
             {
                 GetPileView(allPiles[pileIndex].Id).UpdateCardPositions();
             }
+
+            _dealAnimCompletedPublisher.Publish(new DealAnimationCompletedMessage());
         }
 
         private async UniTask DealCardAndStripPreviousAsync(
@@ -248,6 +253,10 @@ namespace KlondikeSolitaire.Views
             PileView destPileView = GetPileView(message.DestPileId);
 
             List<CardView> movedCards = sourcePileView.RemoveTopCards(message.CardCount);
+            if (message.IsReversed)
+            {
+                movedCards.Reverse();
+            }
             destPileView.AddCards(movedCards);
 
             PileModel destPile = _model.GetPile(message.DestPileId);
@@ -260,7 +269,7 @@ namespace KlondikeSolitaire.Views
             _moveAnimCts ??= new CancellationTokenSource();
             CancellationToken token = _moveAnimCts.Token;
 
-            if (message.SourcePileId.Type == PileType.Stock && message.DestPileId.Type == PileType.Waste)
+            if (message.SourcePileId.Type == PileType.Stock && message.DestPileId.Type == PileType.Waste && message.CardCount == 1)
             {
                 AnimateStockDrawAsync(movedCards[0], destPileView, token).Forget();
             }

@@ -21,6 +21,7 @@ namespace KlondikeSolitaire.Views
             builder.Register<BoardModel>(Lifetime.Singleton);
             builder.Register<ScoreModel>(Lifetime.Singleton);
             builder.Register<GamePhaseModel>(Lifetime.Singleton);
+            builder.Register<DealModel>(Lifetime.Singleton);
             builder.RegisterInstance(new System.Random());
 
             builder.RegisterInstance(_layoutConfig);
@@ -37,7 +38,7 @@ namespace KlondikeSolitaire.Views
             builder.Register<ScoringSystem>(Lifetime.Singleton);
 
             builder.Register<MoveExecutionSystem>(Lifetime.Singleton);
-            builder.Register<UndoSystem>(Lifetime.Singleton);
+            builder.Register<UndoSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<HintSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<AutoCompleteSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<NoMovesDetectionSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
@@ -57,6 +58,10 @@ namespace KlondikeSolitaire.Views
             builder.RegisterMessageBroker<WinDetectedMessage>(options);
             builder.RegisterMessageBroker<NewGameRequestedMessage>(options);
             builder.RegisterMessageBroker<DealCompletedMessage>(options);
+            builder.RegisterMessageBroker<DealAnimationCompletedMessage>(options);
+            builder.RegisterMessageBroker<UndoRequestedMessage>(options);
+            builder.RegisterMessageBroker<HintRequestedMessage>(options);
+            builder.RegisterMessageBroker<AutoCompleteRequestedMessage>(options);
 
             builder.RegisterComponentInHierarchy<BoardView>();
             builder.RegisterComponentInHierarchy<HintView>();
@@ -65,6 +70,8 @@ namespace KlondikeSolitaire.Views
             builder.RegisterComponentInHierarchy<HudView>();
             builder.RegisterComponentInHierarchy<OverlayView>();
             builder.RegisterComponentInHierarchy<WinCascadeView>();
+
+            builder.RegisterEntryPoint<GameBootstrap>();
         }
     }
 }

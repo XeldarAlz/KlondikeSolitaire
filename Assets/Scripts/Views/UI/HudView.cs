@@ -1,5 +1,4 @@
 using KlondikeSolitaire.Core;
-using KlondikeSolitaire.Systems;
 using MessagePipe;
 using TMPro;
 using UnityEngine;
@@ -17,28 +16,28 @@ namespace KlondikeSolitaire.Views
         [SerializeField] private Button _autoCompleteButton;
         [SerializeField] private CanvasGroup _autoCompleteGroup;
 
-        private UndoSystem _undo;
-        private HintSystem _hint;
-        private GameFlowSystem _gameFlow;
+        private IPublisher<UndoRequestedMessage> _undoPublisher;
+        private IPublisher<HintRequestedMessage> _hintPublisher;
         private IPublisher<NewGameRequestedMessage> _newGamePublisher;
+        private IPublisher<AutoCompleteRequestedMessage> _autoCompletePublisher;
 
         private readonly CompositeDisposable _disposables = new();
 
         [Inject]
         public void Construct(
-            UndoSystem undo,
-            HintSystem hint,
-            GameFlowSystem gameFlow,
             ISubscriber<ScoreChangedMessage> scoreSubscriber,
             ISubscriber<UndoAvailabilityChangedMessage> undoSubscriber,
             ISubscriber<AutoCompleteAvailableMessage> autoCompleteSubscriber,
             ISubscriber<GamePhaseChangedMessage> phaseSubscriber,
-            IPublisher<NewGameRequestedMessage> newGamePublisher)
+            IPublisher<UndoRequestedMessage> undoPublisher,
+            IPublisher<HintRequestedMessage> hintPublisher,
+            IPublisher<NewGameRequestedMessage> newGamePublisher,
+            IPublisher<AutoCompleteRequestedMessage> autoCompletePublisher)
         {
-            _undo = undo;
-            _hint = hint;
-            _gameFlow = gameFlow;
+            _undoPublisher = undoPublisher;
+            _hintPublisher = hintPublisher;
             _newGamePublisher = newGamePublisher;
+            _autoCompletePublisher = autoCompletePublisher;
 
             scoreSubscriber.Subscribe(OnScoreChanged).AddTo(_disposables);
             undoSubscriber.Subscribe(OnUndoAvailabilityChanged).AddTo(_disposables);
@@ -116,12 +115,12 @@ namespace KlondikeSolitaire.Views
 
         private void OnUndoClicked()
         {
-            _undo.Undo();
+            _undoPublisher.Publish(new UndoRequestedMessage());
         }
 
         private void OnHintClicked()
         {
-            _hint.GetNextHint();
+            _hintPublisher.Publish(new HintRequestedMessage());
         }
 
         private void OnNewGameClicked()
@@ -131,7 +130,7 @@ namespace KlondikeSolitaire.Views
 
         private void OnAutoCompleteClicked()
         {
-            _gameFlow.StartAutoComplete();
+            _autoCompletePublisher.Publish(new AutoCompleteRequestedMessage());
         }
     }
 }
