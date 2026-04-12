@@ -46,7 +46,6 @@ Proje dokümantasyonu `docs/` klasöründe yer alır:
 | [TDD.md](docs/TDD.md) | Technical Design Document — teknik mimari, sistem tasarımları ve bağımlılıklar |
 | [WORKFLOW.md](docs/WORKFLOW.md) | Fazlar ve görevlerle yürütme planı |
 | [PROGRESS.md](docs/PROGRESS.md) | Orkestratör ilerleme takibi |
-| [ACTIVITY_LOG.md](docs/ACTIVITY_LOG.md) | Otomatik oluşturulan dosya aktivite günlüğü |
 
 ## Testler
 
