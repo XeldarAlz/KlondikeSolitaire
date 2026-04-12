@@ -12,9 +12,9 @@ namespace KlondikeSolitaire.Systems
 
         public ScoringSystem(ScoreModel scoreModel, ScoringTable scoringTable, IPublisher<ScoreChangedMessage> scoreChangedPublisher)
         {
-            _scoreModel = scoreModel ?? throw new ArgumentNullException(nameof(scoreModel));
-            _scoreChangedPublisher = scoreChangedPublisher ?? throw new ArgumentNullException(nameof(scoreChangedPublisher));
+            _scoreModel = scoreModel;
             _scoringTable = scoringTable;
+            _scoreChangedPublisher = scoreChangedPublisher;
         }
 
         public int CalculateScore(MoveType moveType)
@@ -35,6 +35,11 @@ namespace KlondikeSolitaire.Systems
 
         public void ApplyDelta(int delta)
         {
+            if (delta == 0)
+            {
+                return;
+            }
+
             int newScore = System.Math.Max(0, _scoreModel.Score.Value + delta);
             _scoreModel.Score.Value = newScore;
             _scoreChangedPublisher.Publish(new ScoreChangedMessage(newScore, delta));

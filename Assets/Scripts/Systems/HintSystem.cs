@@ -8,28 +8,28 @@ namespace KlondikeSolitaire.Systems
     public sealed class HintSystem : IDisposable
     {
         private readonly BoardModel _board;
-        private readonly MoveValidationSystem _moveValidation;
+        private readonly MoveEnumerator _moveEnumerator;
         private readonly IPublisher<HintHighlightMessage> _hintHighlightPublisher;
         private readonly IPublisher<HintClearedMessage> _hintClearedPublisher;
         private readonly List<Move> _cachedMoves;
+        private readonly CompositeDisposable _disposables;
         private int _hintIndex;
-        private IDisposable _subscription;
 
         public HintSystem(
             BoardModel board,
-            MoveValidationSystem moveValidation,
+            MoveEnumerator moveEnumerator,
             ISubscriber<BoardStateChangedMessage> boardStateSubscriber,
             IPublisher<HintHighlightMessage> hintHighlightPublisher,
             IPublisher<HintClearedMessage> hintClearedPublisher)
         {
-            _board = board ?? throw new ArgumentNullException(nameof(board));
-            _moveValidation = moveValidation ?? throw new ArgumentNullException(nameof(moveValidation));
-            _hintHighlightPublisher = hintHighlightPublisher ?? throw new ArgumentNullException(nameof(hintHighlightPublisher));
-            _hintClearedPublisher = hintClearedPublisher ?? throw new ArgumentNullException(nameof(hintClearedPublisher));
+            _board = board;
+            _moveEnumerator = moveEnumerator;
+            _hintHighlightPublisher = hintHighlightPublisher;
+            _hintClearedPublisher = hintClearedPublisher;
             _cachedMoves = new List<Move>();
             _hintIndex = -1;
-            _subscription = (boardStateSubscriber ?? throw new ArgumentNullException(nameof(boardStateSubscriber)))
-                .Subscribe(OnBoardStateChanged);
+            _disposables = new CompositeDisposable();
+            boardStateSubscriber.Subscribe(OnBoardStateChanged).AddTo(_disposables);
         }
 
         private void OnBoardStateChanged(BoardStateChangedMessage _)
@@ -43,7 +43,7 @@ namespace KlondikeSolitaire.Systems
         {
             if (_cachedMoves.Count == 0)
             {
-                MoveEnumerator.EnumerateAllValidMoves(_board, _moveValidation, _cachedMoves);
+                _moveEnumerator.EnumerateAllValidMoves(_board, _cachedMoves);
 
                 if (_cachedMoves.Count == 0)
                 {
@@ -57,8 +57,7 @@ namespace KlondikeSolitaire.Systems
             PileModel sourcePile = _board.GetPile(currentHint.Source);
             int sourceCardIndex = sourcePile.Count - currentHint.CardCount;
 
-            PileId[] destPileIds = new PileId[] { currentHint.Destination };
-            _hintHighlightPublisher.Publish(new HintHighlightMessage(sourceCardIndex, currentHint.Source, destPileIds));
+            _hintHighlightPublisher.Publish(new HintHighlightMessage(sourceCardIndex, currentHint.Source, currentHint.Destination));
         }
 
         public void Reset()
@@ -70,8 +69,7 @@ namespace KlondikeSolitaire.Systems
 
         public void Dispose()
         {
-            _subscription?.Dispose();
-            _subscription = null;
+            _disposables.Dispose();
         }
     }
 }

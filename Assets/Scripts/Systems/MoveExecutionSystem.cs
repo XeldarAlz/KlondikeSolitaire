@@ -5,7 +5,7 @@ using MessagePipe;
 
 namespace KlondikeSolitaire.Systems
 {
-    public sealed class MoveExecutionSystem : IDisposable
+    public sealed class MoveExecutionSystem
     {
         private readonly BoardModel _boardModel;
         private readonly ScoringSystem _scoringSystem;
@@ -22,12 +22,12 @@ namespace KlondikeSolitaire.Systems
             IPublisher<CardFlippedMessage> cardFlippedPublisher,
             IPublisher<BoardStateChangedMessage> boardStatePublisher)
         {
-            _boardModel = boardModel ?? throw new ArgumentNullException(nameof(boardModel));
-            _scoringSystem = scoringSystem ?? throw new ArgumentNullException(nameof(scoringSystem));
-            _undoSystem = undoSystem ?? throw new ArgumentNullException(nameof(undoSystem));
-            _cardMovedPublisher = cardMovedPublisher ?? throw new ArgumentNullException(nameof(cardMovedPublisher));
-            _cardFlippedPublisher = cardFlippedPublisher ?? throw new ArgumentNullException(nameof(cardFlippedPublisher));
-            _boardStatePublisher = boardStatePublisher ?? throw new ArgumentNullException(nameof(boardStatePublisher));
+            _boardModel = boardModel;
+            _scoringSystem = scoringSystem;
+            _undoSystem = undoSystem;
+            _cardMovedPublisher = cardMovedPublisher;
+            _cardFlippedPublisher = cardFlippedPublisher;
+            _boardStatePublisher = boardStatePublisher;
         }
 
         public void ExecuteMove(PileId source, PileId dest, int cardCount)
@@ -35,8 +35,7 @@ namespace KlondikeSolitaire.Systems
             PileModel sourcePile = _boardModel.GetPile(source);
             PileModel destPile = _boardModel.GetPile(dest);
 
-            List<CardModel> cards = sourcePile.RemoveTop(cardCount);
-            destPile.AddCards(cards);
+            sourcePile.TransferTop(cardCount, destPile);
 
             MoveType moveType = DetermineMoveType(source.Type, dest.Type);
             int scoreDelta = _scoringSystem.CalculateScore(moveType);
@@ -53,7 +52,7 @@ namespace KlondikeSolitaire.Systems
 
             _scoringSystem.ApplyDelta(scoreDelta);
 
-            var command = new MoveCommand(moveType, source, dest, cardCount, scoreDelta, wasCardFlipped, 0);
+            var command = new MoveCommand(moveType, source, dest, cardCount, scoreDelta, wasCardFlipped);
             _undoSystem.Push(command);
 
             _cardMovedPublisher.Publish(new CardMovedMessage(source, dest, cardCount));
@@ -65,13 +64,13 @@ namespace KlondikeSolitaire.Systems
             PileModel stock = _boardModel.Stock;
             PileModel waste = _boardModel.Waste;
 
-            List<CardModel> cards = stock.RemoveTop(1);
-            cards[0].IsFaceUp.Value = true;
-            waste.AddCards(cards);
+            CardModel drawnCard = stock.TopCard;
+            stock.TransferTop(1, waste);
+            drawnCard.IsFaceUp.Value = true;
 
             PileId stockId = PileId.Stock();
             PileId wasteId = PileId.Waste();
-            var command = new MoveCommand(MoveType.DrawFromStock, stockId, wasteId, 1, 0, false, 0);
+            var command = new MoveCommand(MoveType.DrawFromStock, stockId, wasteId, 1, 0, false);
             _undoSystem.Push(command);
 
             _cardMovedPublisher.Publish(new CardMovedMessage(stockId, wasteId, 1));
@@ -84,27 +83,22 @@ namespace KlondikeSolitaire.Systems
             PileModel stock = _boardModel.Stock;
 
             int wasteCardCount = waste.Count;
-            List<CardModel> cards = waste.RemoveAll();
+            waste.TransferAllReversed(stock);
 
-            cards.Reverse();
-
-            for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+            IReadOnlyList<CardModel> stockCards = stock.Cards;
+            for (int cardIndex = 0; cardIndex < stockCards.Count; cardIndex++)
             {
-                cards[cardIndex].IsFaceUp.Value = false;
+                stockCards[cardIndex].IsFaceUp.Value = false;
             }
-
-            stock.AddCards(cards);
 
             PileId wasteId = PileId.Waste();
             PileId stockId = PileId.Stock();
-            var command = new MoveCommand(MoveType.RecycleWaste, wasteId, stockId, wasteCardCount, 0, false, wasteCardCount);
+            var command = new MoveCommand(MoveType.RecycleWaste, wasteId, stockId, wasteCardCount, 0, false);
             _undoSystem.Push(command);
 
             _cardMovedPublisher.Publish(new CardMovedMessage(wasteId, stockId, wasteCardCount));
             _boardStatePublisher.Publish(new BoardStateChangedMessage());
         }
-
-        public void Dispose() { }
 
         private static MoveType DetermineMoveType(PileType sourceType, PileType destType)
         {

@@ -1,17 +1,17 @@
-using System;
 using System.Collections.Generic;
 using KlondikeSolitaire.Core;
 using MessagePipe;
 
 namespace KlondikeSolitaire.Systems
 {
-    public sealed class UndoSystem : IDisposable
+    public sealed class UndoSystem
     {
         private readonly BoardModel _boardModel;
         private readonly ScoringSystem _scoringSystem;
         private readonly IPublisher<UndoAvailabilityChangedMessage> _undoAvailabilityPublisher;
         private readonly IPublisher<BoardStateChangedMessage> _boardStatePublisher;
         private readonly IPublisher<CardFlippedMessage> _cardFlippedPublisher;
+        private readonly IPublisher<CardMovedMessage> _cardMovedPublisher;
         private readonly Stack<MoveCommand> _commandStack;
 
         public bool CanUndo => _commandStack.Count > 0;
@@ -21,13 +21,15 @@ namespace KlondikeSolitaire.Systems
             ScoringSystem scoringSystem,
             IPublisher<UndoAvailabilityChangedMessage> undoAvailabilityPublisher,
             IPublisher<BoardStateChangedMessage> boardStatePublisher,
-            IPublisher<CardFlippedMessage> cardFlippedPublisher)
+            IPublisher<CardFlippedMessage> cardFlippedPublisher,
+            IPublisher<CardMovedMessage> cardMovedPublisher)
         {
-            _boardModel = boardModel ?? throw new ArgumentNullException(nameof(boardModel));
-            _scoringSystem = scoringSystem ?? throw new ArgumentNullException(nameof(scoringSystem));
-            _undoAvailabilityPublisher = undoAvailabilityPublisher ?? throw new ArgumentNullException(nameof(undoAvailabilityPublisher));
-            _boardStatePublisher = boardStatePublisher ?? throw new ArgumentNullException(nameof(boardStatePublisher));
-            _cardFlippedPublisher = cardFlippedPublisher ?? throw new ArgumentNullException(nameof(cardFlippedPublisher));
+            _boardModel = boardModel;
+            _scoringSystem = scoringSystem;
+            _undoAvailabilityPublisher = undoAvailabilityPublisher;
+            _boardStatePublisher = boardStatePublisher;
+            _cardFlippedPublisher = cardFlippedPublisher;
+            _cardMovedPublisher = cardMovedPublisher;
             _commandStack = new Stack<MoveCommand>();
         }
 
@@ -69,8 +71,6 @@ namespace KlondikeSolitaire.Systems
             _undoAvailabilityPublisher.Publish(new UndoAvailabilityChangedMessage(false));
         }
 
-        public void Dispose() { }
-
         private void UndoNormalMove(MoveCommand command)
         {
             PileModel sourcePile = _boardModel.GetPile(command.Source);
@@ -83,10 +83,11 @@ namespace KlondikeSolitaire.Systems
                 _cardFlippedPublisher.Publish(new CardFlippedMessage(sourcePile.Id, sourcePile.Count - 1));
             }
 
-            List<CardModel> cards = destPile.RemoveTop(command.CardCount);
-            sourcePile.AddCards(cards);
+            destPile.TransferTop(command.CardCount, sourcePile);
 
             _scoringSystem.ApplyDelta(-command.ScoreDelta);
+
+            _cardMovedPublisher.Publish(new CardMovedMessage(command.Destination, command.Source, command.CardCount));
         }
 
         private void UndoDrawFromStock(MoveCommand command)
@@ -94,9 +95,11 @@ namespace KlondikeSolitaire.Systems
             PileModel waste = _boardModel.Waste;
             PileModel stock = _boardModel.Stock;
 
-            List<CardModel> card = waste.RemoveTop(1);
-            card[0].IsFaceUp.Value = false;
-            stock.AddCards(card);
+            CardModel drawnCard = waste.TopCard;
+            waste.TransferTop(1, stock);
+            drawnCard.IsFaceUp.Value = false;
+
+            _cardMovedPublisher.Publish(new CardMovedMessage(PileId.Waste(), PileId.Stock(), 1));
         }
 
         private void UndoRecycleWaste(MoveCommand command)
@@ -104,15 +107,16 @@ namespace KlondikeSolitaire.Systems
             PileModel stock = _boardModel.Stock;
             PileModel waste = _boardModel.Waste;
 
-            List<CardModel> cards = stock.RemoveAll();
-            cards.Reverse();
+            int cardCount = stock.Count;
+            stock.TransferAllReversed(waste);
 
-            for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
+            IReadOnlyList<CardModel> wasteCards = waste.Cards;
+            for (int cardIndex = 0; cardIndex < wasteCards.Count; cardIndex++)
             {
-                cards[cardIndex].IsFaceUp.Value = true;
+                wasteCards[cardIndex].IsFaceUp.Value = true;
             }
 
-            waste.AddCards(cards);
+            _cardMovedPublisher.Publish(new CardMovedMessage(PileId.Stock(), PileId.Waste(), cardCount));
         }
     }
 }

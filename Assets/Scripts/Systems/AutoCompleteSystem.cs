@@ -8,21 +8,18 @@ namespace KlondikeSolitaire.Systems
     public sealed class AutoCompleteSystem : IDisposable
     {
         private readonly BoardModel _board;
-        private readonly MoveValidationSystem _moveValidation;
         private readonly IPublisher<AutoCompleteAvailableMessage> _autoCompletePublisher;
-        private IDisposable _subscription;
+        private readonly CompositeDisposable _disposables;
 
         public AutoCompleteSystem(
             BoardModel board,
-            MoveValidationSystem moveValidation,
             ISubscriber<BoardStateChangedMessage> boardStateSubscriber,
             IPublisher<AutoCompleteAvailableMessage> autoCompletePublisher)
         {
-            _board = board ?? throw new ArgumentNullException(nameof(board));
-            _moveValidation = moveValidation ?? throw new ArgumentNullException(nameof(moveValidation));
-            _autoCompletePublisher = autoCompletePublisher ?? throw new ArgumentNullException(nameof(autoCompletePublisher));
-            _subscription = (boardStateSubscriber ?? throw new ArgumentNullException(nameof(boardStateSubscriber)))
-                .Subscribe(OnBoardStateChanged);
+            _board = board;
+            _autoCompletePublisher = autoCompletePublisher;
+            _disposables = new CompositeDisposable();
+            boardStateSubscriber.Subscribe(OnBoardStateChanged).AddTo(_disposables);
         }
 
         private void OnBoardStateChanged(BoardStateChangedMessage _)
@@ -60,6 +57,19 @@ namespace KlondikeSolitaire.Systems
 
         public List<Move> GenerateMoveSequence()
         {
+            int[] tableauCounts = new int[BoardModel.TABLEAU_COUNT];
+            int[] foundationCounts = new int[BoardModel.FOUNDATION_COUNT];
+
+            for (int tableauIndex = 0; tableauIndex < BoardModel.TABLEAU_COUNT; tableauIndex++)
+            {
+                tableauCounts[tableauIndex] = _board.Tableau[tableauIndex].Count;
+            }
+
+            for (int foundationIndex = 0; foundationIndex < BoardModel.FOUNDATION_COUNT; foundationIndex++)
+            {
+                foundationCounts[foundationIndex] = _board.Foundations[foundationIndex].Count;
+            }
+
             List<Move> moves = new();
 
             while (true)
@@ -67,27 +77,22 @@ namespace KlondikeSolitaire.Systems
                 Move? lowestMove = null;
                 int lowestRank = int.MaxValue;
 
-                for (int tableauIndex = 0; tableauIndex < _board.Tableau.Length; tableauIndex++)
+                for (int tableauIndex = 0; tableauIndex < BoardModel.TABLEAU_COUNT; tableauIndex++)
                 {
-                    PileModel tableauPile = _board.Tableau[tableauIndex];
-
-                    if (tableauPile.Count == 0)
+                    int topIndex = tableauCounts[tableauIndex] - 1;
+                    if (topIndex < 0)
                     {
                         continue;
                     }
 
-                    CardModel topCard = tableauPile.TopCard;
+                    CardModel topCard = _board.Tableau[tableauIndex].Cards[topIndex];
                     int foundationIndex = (int)topCard.Suit;
-                    PileId foundationId = PileId.Foundation(foundationIndex);
-                    PileId tableauId = PileId.Tableau(tableauIndex);
+                    int expectedRank = foundationCounts[foundationIndex] + 1;
 
-                    if (_moveValidation.IsValidMove(_board, tableauId, foundationId, 1))
+                    if (topCard.Value == expectedRank && topCard.Value < lowestRank)
                     {
-                        if (topCard.Value < lowestRank)
-                        {
-                            lowestRank = topCard.Value;
-                            lowestMove = new Move(tableauId, foundationId, 1);
-                        }
+                        lowestRank = topCard.Value;
+                        lowestMove = new Move(PileId.Tableau(tableauIndex), PileId.Foundation(foundationIndex), 1);
                     }
                 }
 
@@ -97,12 +102,9 @@ namespace KlondikeSolitaire.Systems
                 }
 
                 Move move = lowestMove.Value;
+                tableauCounts[move.Source.Index]--;
+                foundationCounts[move.Destination.Index]++;
                 moves.Add(move);
-
-                PileModel sourcePile = _board.GetPile(move.Source);
-                PileModel destPile = _board.GetPile(move.Destination);
-                List<CardModel> removedCards = sourcePile.RemoveTop(move.CardCount);
-                destPile.AddCards(removedCards);
             }
 
             return moves;
@@ -110,7 +112,7 @@ namespace KlondikeSolitaire.Systems
 
         public void Dispose()
         {
-            _subscription?.Dispose();
+            _disposables.Dispose();
         }
     }
 }

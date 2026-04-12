@@ -7,24 +7,34 @@ namespace KlondikeSolitaire.Systems
 {
     public sealed class DealSystem
     {
+        private static readonly Suit[] Suits = { Suit.Hearts, Suit.Diamonds, Suit.Clubs, Suit.Spades };
+        private static readonly Rank[] Ranks =
+        {
+            Rank.Ace, Rank.Two, Rank.Three, Rank.Four, Rank.Five, Rank.Six, Rank.Seven,
+            Rank.Eight, Rank.Nine, Rank.Ten, Rank.Jack, Rank.Queen, Rank.King
+        };
+
         private readonly BoardModel _board;
         private readonly IPublisher<DealCompletedMessage> _dealCompletedPublisher;
+        private readonly Random _random;
+        private readonly List<CardModel> _deck;
 
-        public DealSystem(BoardModel board, IPublisher<DealCompletedMessage> dealCompletedPublisher)
+        public DealSystem(BoardModel board, IPublisher<DealCompletedMessage> dealCompletedPublisher, Random random)
         {
-            _board = board ?? throw new ArgumentNullException(nameof(board));
-            _dealCompletedPublisher = dealCompletedPublisher ?? throw new ArgumentNullException(nameof(dealCompletedPublisher));
+            _board = board;
+            _dealCompletedPublisher = dealCompletedPublisher;
+            _random = random;
+            _deck = CreateDeck();
         }
 
         public void CreateDeal()
         {
             Reset();
+            ResetDeck();
+            ShuffleDeck();
 
-            List<CardModel> deck = CreateDeck();
-            ShuffleDeck(deck);
-
-            DealToTableau(deck);
-            DealToStock(deck);
+            DealToTableau();
+            DealToStock();
 
             _dealCompletedPublisher.Publish(new DealCompletedMessage());
         }
@@ -41,39 +51,38 @@ namespace KlondikeSolitaire.Systems
         {
             List<CardModel> deck = new List<CardModel>(capacity: 52);
 
-            Suit[] suits = new[] { Suit.Hearts, Suit.Diamonds, Suit.Clubs, Suit.Spades };
-            Rank[] ranks = new[]
+            for (int suitIndex = 0; suitIndex < Suits.Length; suitIndex++)
             {
-                Rank.Ace, Rank.Two, Rank.Three, Rank.Four, Rank.Five, Rank.Six, Rank.Seven,
-                Rank.Eight, Rank.Nine, Rank.Ten, Rank.Jack, Rank.Queen, Rank.King
-            };
-
-            for (int suitIndex = 0; suitIndex < suits.Length; suitIndex++)
-            {
-                for (int rankIndex = 0; rankIndex < ranks.Length; rankIndex++)
+                for (int rankIndex = 0; rankIndex < Ranks.Length; rankIndex++)
                 {
-                    deck.Add(new CardModel(suits[suitIndex], ranks[rankIndex]));
+                    deck.Add(new CardModel(Suits[suitIndex], Ranks[rankIndex]));
                 }
             }
 
             return deck;
         }
 
-        private void ShuffleDeck(List<CardModel> deck)
+        private void ResetDeck()
         {
-            Random random = new Random();
-
-            for (int cardIndex = deck.Count - 1; cardIndex > 0; cardIndex--)
+            for (int cardIndex = 0; cardIndex < _deck.Count; cardIndex++)
             {
-                int randomIndex = random.Next(cardIndex + 1);
-
-                CardModel temp = deck[cardIndex];
-                deck[cardIndex] = deck[randomIndex];
-                deck[randomIndex] = temp;
+                _deck[cardIndex].IsFaceUp.Value = false;
             }
         }
 
-        private void DealToTableau(List<CardModel> deck)
+        private void ShuffleDeck()
+        {
+            for (int cardIndex = _deck.Count - 1; cardIndex > 0; cardIndex--)
+            {
+                int randomIndex = _random.Next(cardIndex + 1);
+
+                CardModel temp = _deck[cardIndex];
+                _deck[cardIndex] = _deck[randomIndex];
+                _deck[randomIndex] = temp;
+            }
+        }
+
+        private void DealToTableau()
         {
             int cardIndex = 0;
 
@@ -81,7 +90,7 @@ namespace KlondikeSolitaire.Systems
             {
                 for (int rowIndex = 0; rowIndex <= columnIndex; rowIndex++)
                 {
-                    _board.Tableau[columnIndex].AddCard(deck[cardIndex]);
+                    _board.Tableau[columnIndex].AddCard(_deck[cardIndex]);
                     cardIndex++;
                 }
 
@@ -89,11 +98,11 @@ namespace KlondikeSolitaire.Systems
             }
         }
 
-        private void DealToStock(List<CardModel> deck)
+        private void DealToStock()
         {
-            for (int cardIndex = 28; cardIndex < deck.Count; cardIndex++)
+            for (int cardIndex = 28; cardIndex < _deck.Count; cardIndex++)
             {
-                _board.Stock.AddCard(deck[cardIndex]);
+                _board.Stock.AddCard(_deck[cardIndex]);
             }
         }
     }

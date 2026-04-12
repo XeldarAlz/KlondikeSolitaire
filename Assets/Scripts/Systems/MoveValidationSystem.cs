@@ -4,9 +4,6 @@ namespace KlondikeSolitaire.Systems
 {
     public sealed class MoveValidationSystem
     {
-        private const int FOUNDATION_COUNT = 4;
-        private const int TABLEAU_COUNT = 7;
-
         public bool IsValidMove(BoardModel board, PileId source, PileId dest, int cardCount)
         {
             if (cardCount <= 0)
@@ -48,7 +45,7 @@ namespace KlondikeSolitaire.Systems
 
             if (cardCount == 1)
             {
-                for (int foundationIndex = 0; foundationIndex < FOUNDATION_COUNT; foundationIndex++)
+                for (int foundationIndex = 0; foundationIndex < BoardModel.FOUNDATION_COUNT; foundationIndex++)
                 {
                     PileId foundationId = PileId.Foundation(foundationIndex);
                     if (IsValidMove(board, source, foundationId, cardCount))
@@ -58,7 +55,7 @@ namespace KlondikeSolitaire.Systems
                 }
             }
 
-            for (int tableauIndex = 0; tableauIndex < TABLEAU_COUNT; tableauIndex++)
+            for (int tableauIndex = 0; tableauIndex < BoardModel.TABLEAU_COUNT; tableauIndex++)
             {
                 PileId tableauId = PileId.Tableau(tableauIndex);
                 if (tableauId == source)

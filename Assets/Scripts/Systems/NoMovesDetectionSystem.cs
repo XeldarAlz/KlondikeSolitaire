@@ -7,24 +7,24 @@ namespace KlondikeSolitaire.Systems
     public sealed class NoMovesDetectionSystem : IDisposable
     {
         private readonly BoardModel _board;
-        private readonly MoveValidationSystem _moveValidation;
+        private readonly MoveEnumerator _moveEnumerator;
         private readonly GamePhaseModel _gamePhase;
         private readonly IPublisher<NoMovesDetectedMessage> _noMovesPublisher;
-        private IDisposable _subscription;
+        private readonly CompositeDisposable _disposables;
 
         public NoMovesDetectionSystem(
             BoardModel board,
-            MoveValidationSystem moveValidation,
+            MoveEnumerator moveEnumerator,
             GamePhaseModel gamePhase,
             ISubscriber<BoardStateChangedMessage> boardStateSubscriber,
             IPublisher<NoMovesDetectedMessage> noMovesPublisher)
         {
-            _board = board ?? throw new ArgumentNullException(nameof(board));
-            _moveValidation = moveValidation ?? throw new ArgumentNullException(nameof(moveValidation));
-            _gamePhase = gamePhase ?? throw new ArgumentNullException(nameof(gamePhase));
-            _noMovesPublisher = noMovesPublisher ?? throw new ArgumentNullException(nameof(noMovesPublisher));
-            _subscription = (boardStateSubscriber ?? throw new ArgumentNullException(nameof(boardStateSubscriber)))
-                .Subscribe(OnBoardStateChanged);
+            _board = board;
+            _moveEnumerator = moveEnumerator;
+            _gamePhase = gamePhase;
+            _noMovesPublisher = noMovesPublisher;
+            _disposables = new CompositeDisposable();
+            boardStateSubscriber.Subscribe(OnBoardStateChanged).AddTo(_disposables);
         }
 
         private void OnBoardStateChanged(BoardStateChangedMessage _)
@@ -34,7 +34,7 @@ namespace KlondikeSolitaire.Systems
                 return;
             }
 
-            if (MoveEnumerator.HasAnyValidMove(_board, _moveValidation))
+            if (_moveEnumerator.HasAnyValidMove(_board))
             {
                 return;
             }
@@ -44,8 +44,7 @@ namespace KlondikeSolitaire.Systems
 
         public void Dispose()
         {
-            _subscription?.Dispose();
-            _subscription = null;
+            _disposables.Dispose();
         }
     }
 }

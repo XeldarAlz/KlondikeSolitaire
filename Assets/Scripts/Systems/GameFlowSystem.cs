@@ -10,50 +10,42 @@ namespace KlondikeSolitaire.Systems
         private readonly DealSystem _dealSystem;
         private readonly BoardModel _board;
         private readonly ScoreModel _scoreModel;
+        private readonly ScoringSystem _scoringSystem;
         private readonly UndoSystem _undoSystem;
         private readonly HintSystem _hintSystem;
         private readonly IPublisher<GamePhaseChangedMessage> _phaseChangedPublisher;
         private readonly IPublisher<WinDetectedMessage> _winDetectedPublisher;
-        private readonly IPublisher<DealCompletedMessage> _dealCompletedPublisher;
-        private readonly CompositeDisposable _subscriptions;
+        private readonly CompositeDisposable _disposables;
 
         public GameFlowSystem(
             GamePhaseModel gamePhase,
             DealSystem dealSystem,
             BoardModel board,
             ScoreModel scoreModel,
+            ScoringSystem scoringSystem,
             UndoSystem undoSystem,
             HintSystem hintSystem,
             ISubscriber<BoardStateChangedMessage> boardStateSubscriber,
             ISubscriber<NoMovesDetectedMessage> noMovesSubscriber,
             ISubscriber<NewGameRequestedMessage> newGameSubscriber,
             IPublisher<GamePhaseChangedMessage> phaseChangedPublisher,
-            IPublisher<WinDetectedMessage> winDetectedPublisher,
-            IPublisher<DealCompletedMessage> dealCompletedPublisher)
+            IPublisher<WinDetectedMessage> winDetectedPublisher)
         {
-            _gamePhase = gamePhase ?? throw new ArgumentNullException(nameof(gamePhase));
-            _dealSystem = dealSystem ?? throw new ArgumentNullException(nameof(dealSystem));
-            _board = board ?? throw new ArgumentNullException(nameof(board));
-            _scoreModel = scoreModel ?? throw new ArgumentNullException(nameof(scoreModel));
-            _undoSystem = undoSystem ?? throw new ArgumentNullException(nameof(undoSystem));
-            _hintSystem = hintSystem ?? throw new ArgumentNullException(nameof(hintSystem));
-            _phaseChangedPublisher = phaseChangedPublisher ?? throw new ArgumentNullException(nameof(phaseChangedPublisher));
-            _winDetectedPublisher = winDetectedPublisher ?? throw new ArgumentNullException(nameof(winDetectedPublisher));
-            _dealCompletedPublisher = dealCompletedPublisher ?? throw new ArgumentNullException(nameof(dealCompletedPublisher));
+            _gamePhase = gamePhase;
+            _dealSystem = dealSystem;
+            _board = board;
+            _scoreModel = scoreModel;
+            _scoringSystem = scoringSystem;
+            _undoSystem = undoSystem;
+            _hintSystem = hintSystem;
+            _phaseChangedPublisher = phaseChangedPublisher;
+            _winDetectedPublisher = winDetectedPublisher;
 
-            _subscriptions = new CompositeDisposable();
+            _disposables = new CompositeDisposable();
 
-            (boardStateSubscriber ?? throw new ArgumentNullException(nameof(boardStateSubscriber)))
-                .Subscribe(OnBoardStateChanged)
-                .AddTo(_subscriptions);
-
-            (noMovesSubscriber ?? throw new ArgumentNullException(nameof(noMovesSubscriber)))
-                .Subscribe(OnNoMovesDetected)
-                .AddTo(_subscriptions);
-
-            (newGameSubscriber ?? throw new ArgumentNullException(nameof(newGameSubscriber)))
-                .Subscribe(OnNewGameRequested)
-                .AddTo(_subscriptions);
+            boardStateSubscriber.Subscribe(OnBoardStateChanged).AddTo(_disposables);
+            noMovesSubscriber.Subscribe(OnNoMovesDetected).AddTo(_disposables);
+            newGameSubscriber.Subscribe(OnNewGameRequested).AddTo(_disposables);
         }
 
         public void StartNewGame()
@@ -61,7 +53,7 @@ namespace KlondikeSolitaire.Systems
             _gamePhase.Phase.Value = GamePhase.Dealing;
             _phaseChangedPublisher.Publish(new GamePhaseChangedMessage(GamePhase.Dealing));
 
-            _scoreModel.Score.Value = 0;
+            _scoringSystem.Reset();
             _undoSystem.Clear();
             _hintSystem.Reset();
 
@@ -79,7 +71,7 @@ namespace KlondikeSolitaire.Systems
 
         public void Dispose()
         {
-            _subscriptions.Dispose();
+            _disposables.Dispose();
         }
 
         private void OnBoardStateChanged(BoardStateChangedMessage _)
