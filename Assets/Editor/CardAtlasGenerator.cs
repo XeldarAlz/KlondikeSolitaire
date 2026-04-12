@@ -7,8 +7,8 @@ namespace KlondikeSolitaire.Editor
 {
     public static class CardAtlasGenerator
     {
-        private const string SourceRoot = "Assets/Art/Sprites/cards";
-        private const string OutputFolder = "Assets/Art/Sprites/cards/generated";
+        private const string SourceRoot = "Assets/Art/Sprites/Cards";
+        private const string OutputFolder = "Assets/Art/Sprites/Cards/Generated";
         private const int CardWidth = 109;
         private const int CardHeight = 164;
         private const int BackStripHeightPercent = 20;
@@ -58,8 +58,8 @@ namespace KlondikeSolitaire.Editor
 
             Texture2D[] rankTextures = LoadRankTextures();
             Texture2D[] suitTextures = LoadSuitTextures();
-            Texture2D[] redFigureTextures = LoadFigureTextures("red");
-            Texture2D[] blackFigureTextures = LoadFigureTextures("black");
+            Texture2D[] redFigureTextures = LoadFigureTextures("Red");
+            Texture2D[] blackFigureTextures = LoadFigureTextures("Black");
 
             if (!ValidateTextures(rankTextures, suitTextures, redFigureTextures, blackFigureTextures))
             {
@@ -482,7 +482,7 @@ namespace KlondikeSolitaire.Editor
             Texture2D[] textures = new Texture2D[13];
             for (int rankIndex = 0; rankIndex < 13; rankIndex++)
             {
-                textures[rankIndex] = LoadTexture($"{SourceRoot}/card numbers/new/{RankFileNames[rankIndex]}.png");
+                textures[rankIndex] = LoadTexture($"{SourceRoot}/Ranks/{RankFileNames[rankIndex]}.png");
             }
             return textures;
         }
@@ -490,19 +490,19 @@ namespace KlondikeSolitaire.Editor
         private static Texture2D[] LoadSuitTextures()
         {
             Texture2D[] textures = new Texture2D[4];
-            textures[0] = LoadTexture($"{SourceRoot}/semi/new/hearts.png");
-            textures[1] = LoadTexture($"{SourceRoot}/semi/new/diamonds.png");
-            textures[2] = LoadTexture($"{SourceRoot}/semi/new/flowers.png");
-            textures[3] = LoadTexture($"{SourceRoot}/semi/new/spades.png");
+            textures[0] = LoadTexture($"{SourceRoot}/Suits/hearts.png");
+            textures[1] = LoadTexture($"{SourceRoot}/Suits/diamonds.png");
+            textures[2] = LoadTexture($"{SourceRoot}/Suits/flowers.png");
+            textures[3] = LoadTexture($"{SourceRoot}/Suits/spades.png");
             return textures;
         }
 
         private static Texture2D[] LoadFigureTextures(string color)
         {
             Texture2D[] textures = new Texture2D[3];
-            textures[0] = LoadTexture($"{SourceRoot}/figures/{color}/jack.png");
-            textures[1] = LoadTexture($"{SourceRoot}/figures/{color}/queen.png");
-            textures[2] = LoadTexture($"{SourceRoot}/figures/{color}/re.png");
+            textures[0] = LoadTexture($"{SourceRoot}/Figures/{color}/jack.png");
+            textures[1] = LoadTexture($"{SourceRoot}/Figures/{color}/queen.png");
+            textures[2] = LoadTexture($"{SourceRoot}/Figures/{color}/re.png");
             return textures;
         }
 
