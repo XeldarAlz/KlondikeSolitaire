@@ -41,24 +41,9 @@ namespace KlondikeSolitaire.Core
             _cards.Add(card);
         }
 
-        public void AddCards(IReadOnlyList<CardModel> cards)
-        {
-            for (int cardIndex = 0; cardIndex < cards.Count; cardIndex++)
-            {
-                _cards.Add(cards[cardIndex]);
-            }
-        }
-
         public void RemoveTop(int count)
         {
             _cards.RemoveRange(_cards.Count - count, count);
-        }
-
-        public List<CardModel> RemoveAll()
-        {
-            List<CardModel> removed = new List<CardModel>(_cards);
-            _cards.Clear();
-            return removed;
         }
 
         public void TransferTop(int count, PileModel destination)

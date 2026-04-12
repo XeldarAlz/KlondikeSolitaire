@@ -78,9 +78,7 @@ namespace KlondikeSolitaire.Systems
             {
                 int randomIndex = random.Next(cardIndex + 1);
 
-                CardModel temp = _deck[cardIndex];
-                _deck[cardIndex] = _deck[randomIndex];
-                _deck[randomIndex] = temp;
+                (_deck[cardIndex], _deck[randomIndex]) = (_deck[randomIndex], _deck[cardIndex]);
             }
         }
 

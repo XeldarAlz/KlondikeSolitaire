@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using MessagePipe;
 
@@ -26,9 +25,6 @@ namespace KlondikeSolitaire.Systems
                 MoveType.TableauToFoundation => _scoringTable.TableauToFoundation,
                 MoveType.FoundationToTableau => _scoringTable.FoundationToTableau,
                 MoveType.FlipCard => _scoringTable.FlipCard,
-                MoveType.DrawFromStock => 0,
-                MoveType.RecycleWaste => 0,
-                MoveType.TableauToTableau => 0,
                 _ => 0
             };
         }

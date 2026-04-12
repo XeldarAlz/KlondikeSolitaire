@@ -1,4 +1,3 @@
-using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using MessagePipe;
