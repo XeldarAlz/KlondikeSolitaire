@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using KlondikeSolitaire.Core;
+using KlondikeSolitaire.Input;
 using KlondikeSolitaire.Systems;
 using MessagePipe;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using VContainer;
 
 namespace KlondikeSolitaire.Views
@@ -18,10 +18,11 @@ namespace KlondikeSolitaire.Views
         private BoardView _boardView;
         private BoardModel _board;
         private InputConfig _config;
-        private IDisposable _phaseSubscription;
 
+        private SolitaireControls _controls;
         private Camera _mainCamera;
         private readonly Collider2D[] _raycastBuffer = new Collider2D[20];
+        private readonly CompositeDisposable _disposables = new();
 
         private bool _isInputEnabled;
         private bool _pressingDown;
@@ -46,7 +47,6 @@ namespace KlondikeSolitaire.Views
             BoardModel board,
             InputConfig config,
             GamePhaseModel phase,
-            AnimationConfig animConfig,
             ISubscriber<GamePhaseChangedMessage> phaseSubscriber)
         {
             _validation = validation;
@@ -56,20 +56,26 @@ namespace KlondikeSolitaire.Views
             _board = board;
             _config = config;
 
-            _phaseSubscription = phaseSubscriber.Subscribe(OnGamePhaseChanged);
+            phaseSubscriber.Subscribe(OnGamePhaseChanged).AddTo(_disposables);
             _isInputEnabled = phase.Phase.Value == GamePhase.Playing;
-
-            _dragView.Initialize(animConfig);
         }
 
         private void Awake()
         {
             _mainCamera = Camera.main;
             _dragCardBuffer = new CardView[13];
+            _controls = new SolitaireControls();
+        }
+
+        private void OnEnable()
+        {
+            _controls.Game.Enable();
         }
 
         private void OnDisable()
         {
+            _controls.Game.Disable();
+
             if (_dragView != null && _dragView.IsDragging)
             {
                 _dragView.CancelDrag().Forget();
@@ -88,23 +94,17 @@ namespace KlondikeSolitaire.Views
                 return;
             }
 
-            Pointer pointer = Pointer.current;
-            if (pointer == null)
-            {
-                return;
-            }
+            Vector2 screenPos = _controls.Game.Position.ReadValue<Vector2>();
 
-            Vector2 screenPos = pointer.position.ReadValue();
-
-            if (pointer.press.wasPressedThisFrame)
+            if (_controls.Game.Press.WasPressedThisFrame())
             {
                 HandlePointerDown(screenPos);
             }
-            else if (pointer.press.isPressed && _pressingDown)
+            else if (_controls.Game.Press.IsPressed() && _pressingDown)
             {
                 HandlePointerMove(screenPos);
             }
-            else if (pointer.press.wasReleasedThisFrame && _pressingDown)
+            else if (_controls.Game.Press.WasReleasedThisFrame() && _pressingDown)
             {
                 HandlePointerUp(screenPos);
             }
@@ -116,6 +116,8 @@ namespace KlondikeSolitaire.Views
             _pressStartTime = Time.unscaledTime;
             _pressingDown = true;
             _dragThresholdReached = false;
+
+            Physics2D.SyncTransforms();
 
             Vector3 worldPos = ScreenToWorld(screenPos);
             Vector2 worldPos2D = new Vector2(worldPos.x, worldPos.y);
@@ -135,6 +137,13 @@ namespace KlondikeSolitaire.Views
             PileView pileView = FindPileForCard(hitCard);
             if (pileView == null)
             {
+                _pressingDown = false;
+                return;
+            }
+
+            if (pileView.PileId.Type == PileType.Stock)
+            {
+                HandleStockTap(pileView);
                 _pressingDown = false;
                 return;
             }
@@ -228,20 +237,16 @@ namespace KlondikeSolitaire.Views
                 return;
             }
 
-            CardView[] dragCards = new CardView[actualCount];
-            for (int cardIndex = 0; cardIndex < actualCount; cardIndex++)
-            {
-                dragCards[cardIndex] = _dragCardBuffer[cardIndex];
-            }
-
             Vector3 worldPos = ScreenToWorld(screenPos);
-            _dragView.BeginDrag(dragCards, _pressedPile, worldPos);
+            _dragView.BeginDrag(_dragCardBuffer, actualCount, _pressedPile, worldPos);
         }
 
         private async UniTaskVoid HandleDragRelease(Vector2 screenPos)
         {
             PileView sourcePile = _pressedPile;
             int cardCount = _draggableCount;
+
+            Physics2D.SyncTransforms();
 
             Vector3 worldPos = ScreenToWorld(screenPos);
             Vector2 worldPos2D = new Vector2(worldPos.x, worldPos.y);
@@ -287,7 +292,7 @@ namespace KlondikeSolitaire.Views
 
         private void HandleDoubleTap(PileId sourcePileId)
         {
-            for (int foundationIndex = 0; foundationIndex < 4; foundationIndex++)
+            for (int foundationIndex = 0; foundationIndex < BoardModel.FOUNDATION_COUNT; foundationIndex++)
             {
                 PileId foundationId = PileId.Foundation(foundationIndex);
                 if (_validation.IsValidMove(_board, sourcePileId, foundationId, 1))
@@ -324,7 +329,7 @@ namespace KlondikeSolitaire.Views
             }
 
             CardView bestCard = null;
-            int bestOrder = int.MinValue;
+            float bestZ = float.MaxValue;
 
             for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
             {
@@ -335,16 +340,10 @@ namespace KlondikeSolitaire.Views
                     continue;
                 }
 
-                SpriteRenderer sr = col.GetComponent<SpriteRenderer>();
-                if (sr == null)
+                float z = col.transform.position.z;
+                if (z < bestZ)
                 {
-                    continue;
-                }
-
-                int order = sr.sortingOrder + sr.sortingLayerID * 10000;
-                if (order > bestOrder)
-                {
-                    bestOrder = order;
+                    bestZ = z;
                     bestCard = cardView;
                 }
             }
@@ -365,7 +364,7 @@ namespace KlondikeSolitaire.Views
                 PileView pileView = col.GetComponent<PileView>();
                 if (pileView != null)
                 {
-                    float dist = Vector2.Distance(worldPos2D, (Vector2)pileView.transform.position);
+                    float dist = Vector2.Distance(worldPos2D, pileView.transform.position);
                     if (dist < closestDistance)
                     {
                         closestDistance = dist;
@@ -374,7 +373,22 @@ namespace KlondikeSolitaire.Views
                 }
             }
 
-            return closest;
+            if (closest != null)
+            {
+                return closest;
+            }
+
+            for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
+            {
+                Collider2D col = _raycastBuffer[hitIndex];
+                CardView cardView = col.GetComponent<CardView>();
+                if (cardView != null && !_dragView.IsCardBeingDragged(cardView))
+                {
+                    return FindPileForCard(cardView);
+                }
+            }
+
+            return null;
         }
 
         private PileView TryGetStockPileAt(Vector2 worldPos2D)
@@ -486,10 +500,8 @@ namespace KlondikeSolitaire.Views
 
         private void OnDestroy()
         {
-            if (_phaseSubscription != null)
-            {
-                _phaseSubscription.Dispose();
-            }
+            _disposables.Dispose();
+            _controls?.Dispose();
         }
     }
 }

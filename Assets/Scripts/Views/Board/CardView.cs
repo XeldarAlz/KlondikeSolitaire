@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using KlondikeSolitaire.Core;
 using UnityEngine;
 
@@ -6,56 +8,75 @@ namespace KlondikeSolitaire.Views
     public sealed class CardView : MonoBehaviour
     {
         private SpriteRenderer _spriteRenderer;
+        private BoxCollider2D _collider;
 
         private CardModel _model;
         private Sprite _faceSprite;
         private Sprite _backSprite;
         private Sprite _backStripSprite;
+        private CardAnimator _animator;
         private bool _isStripMode;
+        private float _stripAlignOffset;
+        private IDisposable _faceUpSubscription;
 
-        private static int CardsLayerId;
-
-        private readonly CompositeDisposable _disposables = new();
+        public const float Z_STEP = -0.01f;
 
         public CardModel Model => _model;
+        public SpriteRenderer SpriteRenderer => _spriteRenderer;
+        public float StripAlignOffset => _stripAlignOffset;
 
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
-            CardsLayerId = SortingLayer.NameToID("Cards");
+            _collider = GetComponent<BoxCollider2D>();
         }
 
-        public void Initialize(CardModel model, Sprite faceSprite, Sprite backSprite, Sprite backStripSprite)
+        public void Initialize(CardModel model, Sprite faceSprite, Sprite backSprite, Sprite backStripSprite, CardAnimator animator)
         {
+            _faceUpSubscription?.Dispose();
+
             _model = model;
             _faceSprite = faceSprite;
             _backSprite = backSprite;
             _backStripSprite = backStripSprite;
+            _animator = animator;
+            _stripAlignOffset = (_backSprite.bounds.size.y - _backStripSprite.bounds.size.y) * 0.5f;
 
-            model.IsFaceUp.Subscribe(OnFaceUpChanged).AddTo(_disposables);
+            _faceUpSubscription = model.IsFaceUp.Subscribe(OnFaceUpChanged);
 
             UpdateSprite(model.IsFaceUp.Value);
         }
 
-        public void SetSortingOrder(int order)
+        public void SetSortingOrder(int order, float baseZ = 0f)
         {
-            _spriteRenderer.sortingOrder = order;
+            Vector3 pos = transform.position;
+            transform.position = new Vector3(pos.x, pos.y, baseZ + order * Z_STEP);
         }
 
-        public void SetSortingLayer(int layerId)
+        public void SetColliderEnabled(bool enabled)
         {
-            _spriteRenderer.sortingLayerID = layerId;
+            _collider.enabled = enabled;
         }
 
-        public void SetHighlight(bool active)
+        public void SetRendererEnabled(bool enabled)
         {
-            _spriteRenderer.color = active ? Color.yellow : Color.white;
+            _spriteRenderer.enabled = enabled;
+        }
+
+        public void ResetSpriteToBack()
+        {
+            _spriteRenderer.sprite = _backSprite;
+        }
+
+        public UniTask PlayFlipAnimation(bool toFaceUp)
+        {
+            return _animator.FlipCard(_spriteRenderer, _faceSprite, _backSprite, toFaceUp);
         }
 
         public void SetStripMode(bool strip)
         {
             _isStripMode = strip;
-            if (_model != null && !_model.IsFaceUp.Value)
+            if (!_model.IsFaceUp.Value)
             {
                 _spriteRenderer.sprite = _isStripMode ? _backStripSprite : _backSprite;
             }
@@ -80,7 +101,7 @@ namespace KlondikeSolitaire.Views
 
         private void OnDestroy()
         {
-            _disposables.Dispose();
+            _faceUpSubscription?.Dispose();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using KlondikeSolitaire.Core;
 using KlondikeSolitaire.Systems;
 using MessagePipe;
@@ -20,6 +21,7 @@ namespace KlondikeSolitaire.Views
             builder.Register<BoardModel>(Lifetime.Singleton);
             builder.Register<ScoreModel>(Lifetime.Singleton);
             builder.Register<GamePhaseModel>(Lifetime.Singleton);
+            builder.RegisterInstance(new System.Random());
 
             builder.RegisterInstance(_layoutConfig);
             builder.RegisterInstance(_animationConfig);
@@ -27,12 +29,15 @@ namespace KlondikeSolitaire.Views
             builder.RegisterInstance(_cardSpriteMapping);
             builder.RegisterInstance(_scoringConfig.ToScoringTable());
 
+            builder.Register<CardAnimator>(Lifetime.Singleton);
+
             builder.Register<DealSystem>(Lifetime.Singleton);
             builder.Register<MoveValidationSystem>(Lifetime.Singleton);
+            builder.Register<MoveEnumerator>(Lifetime.Singleton);
             builder.Register<ScoringSystem>(Lifetime.Singleton);
 
-            builder.Register<MoveExecutionSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<UndoSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
+            builder.Register<MoveExecutionSystem>(Lifetime.Singleton);
+            builder.Register<UndoSystem>(Lifetime.Singleton);
             builder.Register<HintSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<AutoCompleteSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<NoMovesDetectionSystem>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
@@ -54,6 +59,7 @@ namespace KlondikeSolitaire.Views
             builder.RegisterMessageBroker<DealCompletedMessage>(options);
 
             builder.RegisterComponentInHierarchy<BoardView>();
+            builder.RegisterComponentInHierarchy<HintView>();
             builder.RegisterComponentInHierarchy<InputView>();
             builder.RegisterComponentInHierarchy<DragView>();
             builder.RegisterComponentInHierarchy<HudView>();

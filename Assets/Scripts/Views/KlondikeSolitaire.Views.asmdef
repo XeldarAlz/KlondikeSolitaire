@@ -4,6 +4,7 @@
     "references": [
         "KlondikeSolitaire.Core",
         "KlondikeSolitaire.Systems",
+        "KlondikeSolitaire.Input",
         "VContainer",
         "MessagePipe",
         "MessagePipe.VContainer",

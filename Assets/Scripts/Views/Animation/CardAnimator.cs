@@ -1,20 +1,28 @@
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using PrimeTween;
-using TMPro;
 using UnityEngine;
 
 namespace KlondikeSolitaire.Views
 {
-    public static class CardAnimator
+    public sealed class CardAnimator
     {
-        public static async UniTask MoveCard(Transform card, Vector3 target, AnimationConfig config)
+        private readonly AnimationConfig _config;
+
+        public CardAnimator(AnimationConfig config)
         {
-            await Tween.Position(card, target, config.MoveDuration, Ease.OutCubic);
+            _config = config;
         }
 
-        public static async UniTask FlipCard(SpriteRenderer renderer, Sprite faceSprite, Sprite backSprite, bool toFaceUp, AnimationConfig config)
+        public async UniTask MoveCard(Transform card, Vector3 target)
         {
-            float halfDuration = config.FlipDuration * 0.5f;
+            await Tween.Position(card, target, _config.MoveDuration, Ease.OutCubic);
+        }
+
+        public async UniTask FlipCard(SpriteRenderer renderer, Sprite faceSprite, Sprite backSprite, bool toFaceUp)
+        {
+            float halfDuration = _config.FlipDuration * 0.5f;
             float originalScaleX = renderer.transform.localScale.x;
 
             await Tween.ScaleX(renderer.transform, 0f, halfDuration, Ease.InCubic);
@@ -24,28 +32,32 @@ namespace KlondikeSolitaire.Views
             await Tween.ScaleX(renderer.transform, originalScaleX, halfDuration, Ease.OutCubic);
         }
 
-        public static async UniTask ShakeCard(Transform card, AnimationConfig config)
+        public async UniTask ShakeCard(Transform card)
         {
-            await Tween.ShakeLocalPosition(card, new Vector3(config.ShakeAmplitude, 0f, 0f), config.SnapBackDuration);
+            await Tween.ShakeLocalPosition(card, new Vector3(_config.ShakeAmplitude, 0f, 0f), _config.SnapBackDuration);
         }
 
-        public static async UniTask DealCard(Transform card, Vector3 target, float delay, AnimationConfig config)
+        public async UniTask DealCard(Transform card, Vector3 target, float delay, CancellationToken cancellationToken = default)
         {
-            await UniTask.Delay(System.TimeSpan.FromSeconds(delay));
-            await Tween.Position(card, target, config.MoveDuration, Ease.OutCubic);
+            await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: cancellationToken);
+            await Tween.Position(card, target, _config.MoveDuration, Ease.OutCubic);
         }
 
-        public static async UniTask AnimateScore(TMP_Text text, int from, int to, AnimationConfig config)
+        public void KillAllOnTargets(CardView[] cardViews)
         {
-            await Tween.Custom(text, (float)from, (float)to, config.MoveDuration, (target, value) =>
+            if (cardViews == null)
             {
-                target.text = Mathf.RoundToInt(value).ToString();
-            }, Ease.OutCubic);
-        }
+                return;
+            }
 
-        public static void KillAll()
-        {
-            Tween.StopAll();
+            for (int cardIndex = 0; cardIndex < cardViews.Length; cardIndex++)
+            {
+                CardView cardView = cardViews[cardIndex];
+                if (cardView != null)
+                {
+                    Tween.StopAll(cardView.transform);
+                }
+            }
         }
     }
 }

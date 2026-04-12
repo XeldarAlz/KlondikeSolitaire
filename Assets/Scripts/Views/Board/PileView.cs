@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using KlondikeSolitaire.Core;
 using UnityEngine;
-using VContainer;
 
 namespace KlondikeSolitaire.Views
 {
@@ -13,16 +12,11 @@ namespace KlondikeSolitaire.Views
         private LayoutConfig _layout;
         private readonly List<CardView> _cards = new();
 
-        public PileId PileId => new((_pileType), _pileIndex);
+        public PileId PileId => new(_pileType, _pileIndex);
 
-        [Inject]
         public void Construct(LayoutConfig layout)
         {
             _layout = layout;
-        }
-
-        private void Awake()
-        {
         }
 
         public void AssignCards(List<CardView> cards)
@@ -35,7 +29,6 @@ namespace KlondikeSolitaire.Views
         public void AddCards(List<CardView> cards)
         {
             _cards.AddRange(cards);
-            UpdateCardPositions();
         }
 
         public List<CardView> RemoveTopCards(int count)
@@ -69,66 +62,69 @@ namespace KlondikeSolitaire.Views
             {
                 return GetTableauWorldPosition(index);
             }
-            return transform.position;
+            Vector3 pos = transform.position;
+            return new Vector3(pos.x, pos.y, index * CardView.Z_STEP);
         }
 
-        public List<CardView> GetCardViews()
+        public IReadOnlyList<CardView> GetCardViews()
         {
             return _cards;
+        }
+
+        public void ClearCards()
+        {
+            _cards.Clear();
+            UpdateCardPositions();
         }
 
         private void UpdateStackedPositions()
         {
             Vector3 pilePosition = transform.position;
+            int lastIndex = _cards.Count - 1;
             for (int cardIndex = 0; cardIndex < _cards.Count; cardIndex++)
             {
                 CardView cardView = _cards[cardIndex];
-                cardView.transform.localPosition = transform.InverseTransformPoint(pilePosition);
+                cardView.transform.position = pilePosition;
                 cardView.SetSortingOrder(cardIndex);
                 cardView.SetStripMode(false);
+                cardView.SetRendererEnabled(cardIndex == lastIndex);
             }
         }
 
         private void UpdateTableauPositions()
         {
-            if (_layout == null)
-            {
-                return;
-            }
-
             int lastFaceDownIndex = FindLastFaceDownIndex();
 
             float yOffset = 0f;
+            Vector3 pilePosition = transform.position;
             for (int cardIndex = 0; cardIndex < _cards.Count; cardIndex++)
             {
                 CardView cardView = _cards[cardIndex];
-                Vector3 localPos = new Vector3(0f, -yOffset, 0f);
-                cardView.transform.localPosition = localPos;
-                cardView.SetSortingOrder(cardIndex);
 
-                bool isFaceUp = cardView.Model != null && cardView.Model.IsFaceUp.Value;
+                bool isFaceUp = cardView.Model.IsFaceUp.Value;
 
                 if (!isFaceUp)
                 {
                     bool hasCardOnTop = cardIndex < _cards.Count - 1;
                     bool isLastFaceDown = cardIndex == lastFaceDownIndex;
+                    bool isStrip = hasCardOnTop && !isLastFaceDown;
 
-                    if (hasCardOnTop && !isLastFaceDown)
-                    {
-                        cardView.SetStripMode(true);
-                    }
-                    else
-                    {
-                        cardView.SetStripMode(false);
-                    }
+                    cardView.SetStripMode(isStrip);
+
+                    float alignOffset = isStrip ? cardView.StripAlignOffset : 0f;
+                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset + alignOffset, pilePosition.z);
 
                     yOffset += _layout.FaceDownYOffset;
                 }
                 else
                 {
                     cardView.SetStripMode(false);
+                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset, pilePosition.z);
                     yOffset += _layout.FaceUpYOffset;
                 }
+
+                cardView.SetSortingOrder(cardIndex);
+                cardView.SetRendererEnabled(true);
             }
         }
 
@@ -138,7 +134,7 @@ namespace KlondikeSolitaire.Views
             for (int cardIndex = 0; cardIndex < _cards.Count; cardIndex++)
             {
                 CardView cardView = _cards[cardIndex];
-                bool isFaceUp = cardView.Model != null && cardView.Model.IsFaceUp.Value;
+                bool isFaceUp = cardView.Model.IsFaceUp.Value;
                 if (!isFaceUp)
                 {
                     lastFaceDown = cardIndex;
@@ -153,20 +149,29 @@ namespace KlondikeSolitaire.Views
 
         private Vector3 GetTableauWorldPosition(int index)
         {
-            if (_layout == null || index < 0 || index >= _cards.Count)
+            if (index < 0 || index >= _cards.Count)
             {
                 return transform.position;
             }
+
+            int lastFaceDownIndex = FindLastFaceDownIndex();
 
             float yOffset = 0f;
             for (int cardIndex = 0; cardIndex < index; cardIndex++)
             {
                 CardView cardView = _cards[cardIndex];
-                bool isFaceUp = cardView.Model != null && cardView.Model.IsFaceUp.Value;
+                bool isFaceUp = cardView.Model.IsFaceUp.Value;
                 yOffset += isFaceUp ? _layout.FaceUpYOffset : _layout.FaceDownYOffset;
             }
 
-            return transform.position + new Vector3(0f, -yOffset, 0f);
+            CardView targetCard = _cards[index];
+            bool targetIsFaceUp = targetCard.Model.IsFaceUp.Value;
+            bool isStrip = !targetIsFaceUp
+                && index < _cards.Count - 1
+                && index != lastFaceDownIndex;
+            float alignOffset = isStrip ? targetCard.StripAlignOffset : 0f;
+
+            return transform.position + new Vector3(0f, -yOffset + alignOffset, index * CardView.Z_STEP);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -26,7 +27,8 @@ namespace KlondikeSolitaire.Views
         private const float CARD_TWEEN_DURATION = 4.0f;
         private const float INITIAL_SPEED = 5.5f;
 
-        private static int CascadeLayerId;
+        private Camera _mainCamera;
+        private int _cascadeLayerId;
 
         private readonly SpriteRenderer[] _stampRenderers = new SpriteRenderer[STAMP_POOL_SIZE];
         private readonly GameObject[] _stampObjects = new GameObject[STAMP_POOL_SIZE];
@@ -55,13 +57,14 @@ namespace KlondikeSolitaire.Views
 
         private void Start()
         {
-            CascadeLayerId = SortingLayer.NameToID("Cascade");
+            _mainCamera = Camera.main;
+            _cascadeLayerId = SortingLayer.NameToID("Cascade");
             for (int stampIndex = 0; stampIndex < STAMP_POOL_SIZE; stampIndex++)
             {
                 GameObject instance = Instantiate(_cascadeStampPrefab, _stampPoolParent);
                 _stampObjects[stampIndex] = instance;
                 _stampRenderers[stampIndex] = instance.GetComponent<SpriteRenderer>();
-                _stampRenderers[stampIndex].sortingLayerID = CascadeLayerId;
+                _stampRenderers[stampIndex].sortingLayerID = _cascadeLayerId;
                 instance.SetActive(false);
             }
         }
@@ -95,13 +98,12 @@ namespace KlondikeSolitaire.Views
 
             ResetStampPool();
 
-            Camera mainCamera = Camera.main;
-            float screenHalfHeight = mainCamera.orthographicSize;
-            float screenHalfWidth = screenHalfHeight * mainCamera.aspect;
+            float screenHalfHeight = _mainCamera.orthographicSize;
+            float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
 
-            float bottomBound = mainCamera.transform.position.y - screenHalfHeight;
-            float leftBound = mainCamera.transform.position.x - screenHalfWidth;
-            float rightBound = mainCamera.transform.position.x + screenHalfWidth;
+            float bottomBound = _mainCamera.transform.position.y - screenHalfHeight;
+            float leftBound = _mainCamera.transform.position.x - screenHalfWidth;
+            float rightBound = _mainCamera.transform.position.x + screenHalfWidth;
 
             PileModel[] foundations = _boardModel.Foundations;
 
@@ -125,7 +127,7 @@ namespace KlondikeSolitaire.Views
                     LaunchCardAsync(cardSprite, foundations[foundationIndex], cardIndex, directionSign,
                         bottomBound, leftBound, rightBound, token).Forget();
 
-                    await UniTask.Delay(System.TimeSpan.FromSeconds(CARD_LAUNCH_DELAY), cancellationToken: token);
+                    await UniTask.Delay(TimeSpan.FromSeconds(CARD_LAUNCH_DELAY), cancellationToken: token);
                 }
             }
         }
@@ -140,12 +142,10 @@ namespace KlondikeSolitaire.Views
             float rightBound,
             CancellationToken token)
         {
-            Camera mainCamera = Camera.main;
-
-            float screenHalfHeight = mainCamera.orthographicSize;
-            float screenHalfWidth = screenHalfHeight * mainCamera.aspect;
-            float startX = mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * 0.3f) - screenHalfWidth * 0.6f;
-            float startY = mainCamera.transform.position.y + screenHalfHeight * 0.3f;
+            float screenHalfHeight = _mainCamera.orthographicSize;
+            float screenHalfWidth = screenHalfHeight * _mainCamera.aspect;
+            float startX = _mainCamera.transform.position.x + foundation.PileIndex * (screenHalfWidth * 0.3f) - screenHalfWidth * 0.6f;
+            float startY = _mainCamera.transform.position.y + screenHalfHeight * 0.3f;
 
             Vector2 velocity = new Vector2(directionSign * INITIAL_SPEED, INITIAL_SPEED * 0.8f);
 
@@ -217,7 +217,7 @@ namespace KlondikeSolitaire.Views
             SpriteRenderer stampRenderer = _stampRenderers[stampIndex];
 
             stampRenderer.sprite = sprite;
-            stampRenderer.sortingLayerID = CascadeLayerId;
+            stampRenderer.sortingLayerID = _cascadeLayerId;
             stampRenderer.sortingOrder = sortingOrderOffset;
             stampObject.transform.position = position;
             stampObject.SetActive(true);
