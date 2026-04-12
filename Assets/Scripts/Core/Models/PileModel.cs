@@ -49,12 +49,9 @@ namespace KlondikeSolitaire.Core
             }
         }
 
-        public List<CardModel> RemoveTop(int count)
+        public void RemoveTop(int count)
         {
-            int startIndex = _cards.Count - count;
-            List<CardModel> removed = _cards.GetRange(startIndex, count);
-            _cards.RemoveRange(startIndex, count);
-            return removed;
+            _cards.RemoveRange(_cards.Count - count, count);
         }
 
         public List<CardModel> RemoveAll()
