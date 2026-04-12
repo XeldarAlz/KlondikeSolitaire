@@ -103,61 +103,39 @@ namespace KlondikeSolitaire.Views
 
         private void UpdateTableauPositions()
         {
-            int lastFaceDownIndex = FindLastFaceDownIndex();
-
             float yOffset = 0f;
             Vector3 pilePosition = transform.position;
+
             for (int cardIndex = 0; cardIndex < _cards.Count; cardIndex++)
             {
                 CardView cardView = _cards[cardIndex];
-
                 bool isFaceUp = cardView.Model.IsFaceUp.Value;
+                bool isStrip = IsCardStripped(cardIndex);
 
-                if (!isFaceUp)
-                {
-                    bool hasCardOnTop = cardIndex < _cards.Count - 1;
-                    bool isLastFaceDown = cardIndex == lastFaceDownIndex;
-                    bool isStrip = hasCardOnTop && !isLastFaceDown;
-
-                    cardView.SetStripMode(isStrip);
-
-                    float alignOffset = isStrip ? cardView.StripAlignOffset : 0f;
-                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset + alignOffset, pilePosition.z);
-
-                    yOffset += _layout.FaceDownYOffset;
-                }
-                else
-                {
-                    bool hasCardOnTop = cardIndex < _cards.Count - 1;
-                    cardView.SetStripMode(hasCardOnTop);
-
-                    float alignOffset = hasCardOnTop ? cardView.StripAlignOffset : 0f;
-                    cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset + alignOffset, pilePosition.z);
-                    yOffset += _layout.FaceUpYOffset;
-                }
+                cardView.SetStripMode(isStrip);
+                float alignOffset = isStrip ? cardView.StripAlignOffset : 0f;
+                cardView.transform.position = new Vector3(pilePosition.x, pilePosition.y - yOffset + alignOffset, pilePosition.z);
+                yOffset += isFaceUp ? _layout.FaceUpYOffset : _layout.FaceDownYOffset;
 
                 cardView.SetSortingOrder(cardIndex);
                 cardView.SetRendererEnabled(true);
             }
         }
 
-        private int FindLastFaceDownIndex()
+        private float ComputeTableauYOffset(int upToIndex)
         {
-            int lastFaceDown = -1;
-            for (int cardIndex = 0; cardIndex < _cards.Count; cardIndex++)
+            float yOffset = 0f;
+            for (int cardIndex = 0; cardIndex < upToIndex; cardIndex++)
             {
-                CardView cardView = _cards[cardIndex];
-                bool isFaceUp = cardView.Model.IsFaceUp.Value;
-                if (!isFaceUp)
-                {
-                    lastFaceDown = cardIndex;
-                }
-                else
-                {
-                    break;
-                }
+                bool isFaceUp = _cards[cardIndex].Model.IsFaceUp.Value;
+                yOffset += isFaceUp ? _layout.FaceUpYOffset : _layout.FaceDownYOffset;
             }
-            return lastFaceDown;
+            return yOffset;
+        }
+
+        private bool IsCardStripped(int cardIndex)
+        {
+            return cardIndex < _cards.Count - 1;
         }
 
         private Vector3 GetTableauWorldPosition(int index)
@@ -167,23 +145,9 @@ namespace KlondikeSolitaire.Views
                 return transform.position;
             }
 
-            int lastFaceDownIndex = FindLastFaceDownIndex();
-
-            float yOffset = 0f;
-            for (int cardIndex = 0; cardIndex < index; cardIndex++)
-            {
-                CardView cardView = _cards[cardIndex];
-                bool isFaceUp = cardView.Model.IsFaceUp.Value;
-                yOffset += isFaceUp ? _layout.FaceUpYOffset : _layout.FaceDownYOffset;
-            }
-
-            CardView targetCard = _cards[index];
-            bool targetIsFaceUp = targetCard.Model.IsFaceUp.Value;
-            bool hasCardOnTop = index < _cards.Count - 1;
-            bool isStrip = targetIsFaceUp
-                ? hasCardOnTop
-                : hasCardOnTop && index != lastFaceDownIndex;
-            float alignOffset = isStrip ? targetCard.StripAlignOffset : 0f;
+            float yOffset = ComputeTableauYOffset(index);
+            bool isStrip = IsCardStripped(index);
+            float alignOffset = isStrip ? _cards[index].StripAlignOffset : 0f;
 
             return transform.position + new Vector3(0f, -yOffset + alignOffset, index * CardView.Z_STEP);
         }

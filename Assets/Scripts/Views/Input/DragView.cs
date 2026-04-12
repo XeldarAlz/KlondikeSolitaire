@@ -50,6 +50,18 @@ namespace KlondikeSolitaire.Views
                 _dragOffsets[cardIndex] = cards[cardIndex].transform.position - pointerWorldPos;
             }
 
+            IReadOnlyList<CardView> pileCards = originPile.GetCardViews();
+            int revealIndex = pileCards.Count - count - 1;
+            if (revealIndex >= 0)
+            {
+                CardView revealedCard = pileCards[revealIndex];
+                float alignOffset = revealedCard.StripAlignOffset;
+                revealedCard.SetRendererEnabled(true);
+                revealedCard.SetStripMode(false);
+                Vector3 pos = revealedCard.transform.position;
+                revealedCard.transform.position = new Vector3(pos.x, pos.y - alignOffset, pos.z);
+            }
+
             _isDragging = true;
         }
 
