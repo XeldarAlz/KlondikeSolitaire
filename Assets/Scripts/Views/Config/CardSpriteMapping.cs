@@ -7,6 +7,7 @@ namespace KlondikeSolitaire.Views
     public sealed class CardSpriteMapping : ScriptableObject
     {
         [SerializeField] private Sprite[] _faceSprites;
+        [SerializeField] private Sprite[] _faceStripSprites;
         [SerializeField] private Sprite _backSprite;
         [SerializeField] private Sprite _backStripSprite;
         [SerializeField] private Sprite _baseSprite;
@@ -17,8 +18,14 @@ namespace KlondikeSolitaire.Views
 
         public Sprite GetFaceSprite(Suit suit, Rank rank)
         {
-            int index = (int)suit * 13 + ((int)rank - 1);
+            int index = (int)suit * BoardModel.RANK_COUNT + ((int)rank - 1);
             return _faceSprites[index];
+        }
+
+        public Sprite GetFaceStripSprite(Suit suit, Rank rank)
+        {
+            int index = (int)suit * BoardModel.RANK_COUNT + ((int)rank - 1);
+            return _faceStripSprites[index];
         }
     }
 }

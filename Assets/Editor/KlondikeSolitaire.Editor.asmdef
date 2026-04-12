@@ -3,7 +3,9 @@
     "rootNamespace": "KlondikeSolitaire.Editor",
     "references": [
         "KlondikeSolitaire.Core",
-        "KlondikeSolitaire.Views"
+        "KlondikeSolitaire.Systems",
+        "KlondikeSolitaire.Views",
+        "VContainer"
     ],
     "includePlatforms": [
         "Editor"

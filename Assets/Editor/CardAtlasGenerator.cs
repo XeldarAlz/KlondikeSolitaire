@@ -12,7 +12,9 @@ namespace KlondikeSolitaire.Editor
         private const string OutputFolder = "Assets/Art/Sprites/cards/generated";
         private const int CardWidth = 512;
         private const int CardHeight = 716;
-        private const int BackStripHeightPercent = 20;
+        private const int BackStripHeightPercent = 11;
+        private const int FaceStripHeightPercent = 26;
+        private const int FaceCardPixelsPerUnit = 512;
 
         private static readonly string[] SuitNames = { "hearts", "diamonds", "clubs", "spades" };
 
@@ -48,9 +50,8 @@ namespace KlondikeSolitaire.Editor
         {
             Texture2D cardFront = LoadTexture($"{SourceRoot}/card_front.png");
             Texture2D cardBack = LoadTexture($"{SourceRoot}/card_back.png");
-            Texture2D cardBase = LoadTexture($"{SourceRoot}/card_base.png");
 
-            if (cardFront == null || cardBack == null || cardBase == null)
+            if (cardFront == null || cardBack == null)
             {
                 Debug.LogError("[CardAtlasGenerator] Missing essential source textures. Aborting.");
                 return;
@@ -69,6 +70,7 @@ namespace KlondikeSolitaire.Editor
             EnsureOutputFolder();
 
             string[] cardSpritePaths = new string[52];
+            string[] faceStripPaths = new string[52];
             int totalCards = 52;
             int generatedCount = 0;
 
@@ -78,7 +80,7 @@ namespace KlondikeSolitaire.Editor
                 {
                     float progress = (float)(suitIndex * 13 + rankIndex) / totalCards;
                     string progressLabel = $"Generating card_{SuitNames[suitIndex]}_{RankOutputNames[rankIndex]}.png";
-                    EditorUtility.DisplayProgressBar("Card Atlas Generator", progressLabel, progress * 0.9f);
+                    EditorUtility.DisplayProgressBar("Card Atlas Generator", progressLabel, progress * 0.85f);
 
                     bool isRed = suitIndex == 0 || suitIndex == 1;
                     Texture2D[] figureTextures = isRed ? redFigureTextures : blackFigureTextures;
@@ -94,6 +96,10 @@ namespace KlondikeSolitaire.Editor
 
                     string outputPath = $"{OutputFolder}/card_{SuitNames[suitIndex]}_{RankOutputNames[rankIndex]}.png";
                     SaveTextureToPng(generated, outputPath);
+
+                    string stripPath = GenerateFaceStrip(generated, suitIndex, rankIndex);
+                    faceStripPaths[suitIndex * 13 + rankIndex] = stripPath;
+
                     Object.DestroyImmediate(generated);
 
                     cardSpritePaths[suitIndex * 13 + rankIndex] = outputPath;
@@ -101,16 +107,19 @@ namespace KlondikeSolitaire.Editor
                 }
             }
 
-            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Generating back strip...", 0.92f);
+            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Generating back strip...", 0.86f);
             string backStripPath = GenerateBackStrip(cardBack);
 
-            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Refreshing AssetDatabase...", 0.95f);
+            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Refreshing AssetDatabase...", 0.90f);
             AssetDatabase.Refresh();
 
-            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Populating CardSpriteMapping...", 0.97f);
-            PopulateCardSpriteMapping(cardSpritePaths, backStripPath);
+            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Configuring strip import settings...", 0.93f);
+            ConfigureStripImportSettings(faceStripPaths, backStripPath);
 
-            Debug.Log($"[CardAtlasGenerator] Generated {generatedCount + 1} sprites. Repack Cards.spriteatlas.");
+            EditorUtility.DisplayProgressBar("Card Atlas Generator", "Populating CardSpriteMapping...", 0.97f);
+            PopulateCardSpriteMapping(cardSpritePaths, faceStripPaths, backStripPath);
+
+            Debug.Log($"[CardAtlasGenerator] Generated {generatedCount} face + {generatedCount} face strips + 1 back strip = {generatedCount * 2 + 1} sprites. Repack Cards.spriteatlas.");
         }
 
         private static Texture2D CompositeCard(
@@ -288,16 +297,38 @@ namespace KlondikeSolitaire.Editor
             );
         }
 
-        private static string GenerateBackStrip(Texture2D cardBack)
+        private static string GenerateFaceStrip(Texture2D faceTexture, int suitIndex, int rankIndex)
         {
-            int stripHeight = Mathf.RoundToInt(cardBack.height * BackStripHeightPercent / 100f);
-            int stripWidth = cardBack.width;
-            int sourceOffsetY = cardBack.height - stripHeight;
+            int stripHeight = Mathf.RoundToInt(faceTexture.height * FaceStripHeightPercent / 100f);
+            int sourceOffsetY = faceTexture.height - stripHeight;
 
-            Texture2D strip = new Texture2D(stripWidth, stripHeight, TextureFormat.RGBA32, false);
-            Color[] stripPixels = cardBack.GetPixels(0, sourceOffsetY, stripWidth, stripHeight);
+            Texture2D strip = new Texture2D(faceTexture.width, stripHeight, TextureFormat.RGBA32, false);
+            Color[] stripPixels = faceTexture.GetPixels(0, sourceOffsetY, faceTexture.width, stripHeight);
             strip.SetPixels(stripPixels);
             strip.Apply();
+
+            string outputPath = $"{OutputFolder}/card_{SuitNames[suitIndex]}_{RankOutputNames[rankIndex]}_strip.png";
+            SaveTextureToPng(strip, outputPath);
+            Object.DestroyImmediate(strip);
+            return outputPath;
+        }
+
+        private static string GenerateBackStrip(Texture2D cardBack)
+        {
+            Texture2D scaled = new Texture2D(CardWidth, CardHeight, TextureFormat.RGBA32, false);
+            Color[] scaledPixels = ScaleTexture(cardBack, CardWidth, CardHeight);
+            scaled.SetPixels(scaledPixels);
+            scaled.Apply();
+
+            int stripHeight = Mathf.RoundToInt(CardHeight * BackStripHeightPercent / 100f);
+            int sourceOffsetY = CardHeight - stripHeight;
+
+            Texture2D strip = new Texture2D(CardWidth, stripHeight, TextureFormat.RGBA32, false);
+            Color[] stripPixels = scaled.GetPixels(0, sourceOffsetY, CardWidth, stripHeight);
+            strip.SetPixels(stripPixels);
+            strip.Apply();
+
+            Object.DestroyImmediate(scaled);
 
             string outputPath = $"{OutputFolder}/card_back_strip.png";
             SaveTextureToPng(strip, outputPath);
@@ -305,7 +336,45 @@ namespace KlondikeSolitaire.Editor
             return outputPath;
         }
 
-        private static void PopulateCardSpriteMapping(string[] cardSpritePaths, string backStripPath)
+        private static void ConfigureStripImportSettings(string[] faceStripPaths, string backStripPath)
+        {
+            for (int spriteIndex = 0; spriteIndex < faceStripPaths.Length; spriteIndex++)
+            {
+                ConfigureSingleStripImporter(faceStripPaths[spriteIndex]);
+            }
+
+            ConfigureSingleStripImporter(backStripPath);
+        }
+
+        private static void ConfigureSingleStripImporter(string assetPath)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null)
+            {
+                return;
+            }
+
+            if (importer.textureType == TextureImporterType.Sprite
+                && Mathf.RoundToInt(importer.spritePixelsPerUnit) == FaceCardPixelsPerUnit)
+            {
+                return;
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spritePixelsPerUnit = FaceCardPixelsPerUnit;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.mipmapEnabled = false;
+
+            TextureImporterSettings settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteMeshType = SpriteMeshType.Tight;
+            settings.spriteExtrude = 1;
+            importer.SetTextureSettings(settings);
+
+            importer.SaveAndReimport();
+        }
+
+        private static void PopulateCardSpriteMapping(string[] cardSpritePaths, string[] faceStripPaths, string backStripPath)
         {
             string[] guids = AssetDatabase.FindAssets("t:CardSpriteMapping");
             if (guids.Length == 0)
@@ -328,6 +397,9 @@ namespace KlondikeSolitaire.Editor
             SerializedProperty faceSpritesProperty = serializedMapping.FindProperty("_faceSprites");
             faceSpritesProperty.arraySize = 52;
 
+            SerializedProperty faceStripSpritesProperty = serializedMapping.FindProperty("_faceStripSprites");
+            faceStripSpritesProperty.arraySize = 52;
+
             for (int spriteIndex = 0; spriteIndex < 52; spriteIndex++)
             {
                 Sprite faceSprite = AssetDatabase.LoadAssetAtPath<Sprite>(cardSpritePaths[spriteIndex]);
@@ -336,6 +408,13 @@ namespace KlondikeSolitaire.Editor
                     Debug.LogWarning($"[CardAtlasGenerator] Could not load sprite at {cardSpritePaths[spriteIndex]}");
                 }
                 faceSpritesProperty.GetArrayElementAtIndex(spriteIndex).objectReferenceValue = faceSprite;
+
+                Sprite faceStripSprite = AssetDatabase.LoadAssetAtPath<Sprite>(faceStripPaths[spriteIndex]);
+                if (faceStripSprite == null)
+                {
+                    Debug.LogWarning($"[CardAtlasGenerator] Could not load face strip sprite at {faceStripPaths[spriteIndex]}");
+                }
+                faceStripSpritesProperty.GetArrayElementAtIndex(spriteIndex).objectReferenceValue = faceStripSprite;
             }
 
             SerializedProperty backSpriteProperty = serializedMapping.FindProperty("_backSprite");
@@ -345,7 +424,7 @@ namespace KlondikeSolitaire.Editor
             backStripSpriteProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(backStripPath);
 
             SerializedProperty baseSpriteProperty = serializedMapping.FindProperty("_baseSprite");
-            baseSpriteProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{SourceRoot}/card_base.png");
+            baseSpriteProperty.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{SourceRoot}/cart_bottom.png");
 
             serializedMapping.ApplyModifiedProperties();
             EditorUtility.SetDirty(mapping);
