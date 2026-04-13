@@ -15,7 +15,7 @@ Proje **9 fazda**, **45 görev** ve **335 test** ile tamamlandı — tüm testle
 | Scripts | ~0.131 ms |
 | Rendering | ~0.040 ms |
 | Texture | 5 / ~9.1 MB |
-
+ 
 ## Optimizasyon
 
 - **Dynamic batching** — 42 sprite çizimi 2 batch'e düşürüldü
