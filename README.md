@@ -59,17 +59,6 @@ Unity 6 · URP · VContainer · MessagePipe · UniTask · PrimeTween · Input Sy
 - **EditMode (299):** Every core system — deal, move, undo, hint, scoring, auto-complete, validation, enumeration, no-moves detection, game flow
 - **PlayMode (36):** Integration tests across the full view/system stack
 
-Run via `Window → General → Test Runner` in the Unity Editor.
-
-## Getting Started
-
-**Requirements:** Unity 6 (6000.0+).
-
-1. Clone this repository
-2. Open the project in Unity Hub
-3. Open `Assets/Scenes/Game.unity`
-4. Press **Play**
-
 ## How to Play
 
 - **Drag** or **click** a card to move it
@@ -95,9 +84,3 @@ Full project documentation lives in [`docs/`](docs/):
 ## About the Pipeline
 
 The code, tests, and documentation in this repository were produced by [Helm](https://github.com/XeldarAlz/helm), a multi-agent orchestration system for Claude Code that coordinates specialized agents (architect, coder, tester, reviewer, committer) through a phased build. Every rule in `.claude/rules/` — pure-C# logic, zero allocations on hot paths, mandatory tests, draw-call budgeting — was enforced automatically during generation.
-
-## Author
-
-**Serdar Alemdar** — [@XeldarAlz](https://github.com/XeldarAlz)
-
-Contributions, issues, and feedback are welcome.
